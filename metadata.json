@@ -1,0 +1,6 @@
+{
+  "name": "My Legal Guardian",
+  "description": "A 100% offline residential lease and freelance contract scanner that flags confusing or predatory clauses and explains them in plain English.",
+  "requestFramePermissions": [],
+  "majorCapabilities": ["MAJOR_CAPABILITY_SERVER_SIDE_GEMINI_API"]
+}

@@ -1,0 +1,17 @@
+<?xml version="1.0" encoding="utf-8"?>
+<vector xmlns:android="http://schemas.android.com/apk/res/android"
+    android:width="108dp"
+    android:height="108dp"
+    android:viewportWidth="108"
+    android:viewportHeight="108">
+    <!-- Centered bold vector shield with document lines representing contract protection -->
+    <path
+        android:fillColor="#F9F9F7"
+        android:pathData="M54,23 L28,34 L28,55 C28,74 39,88 54,92 C69,88 80,74 80,55 L80,34 Z" />
+    <path
+        android:fillColor="#0A192F"
+        android:pathData="M44,45 h20 v4 h-20 z M44,53 h20 v4 h-20 z M44,61 h14 v4 h-14 z" />
+    <path
+        android:fillColor="#2E7D32"
+        android:pathData="M51,33 l6,0 l-3,5 z" />
+</vector>
