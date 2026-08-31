@@ -6,25 +6,32 @@ import androidx.compose.ui.text.font.FontWeight
 import androidx.compose.ui.unit.sp
 
 // ═══════════════════════════════════════════════════════════════════════════════
-// My Legal Guardian — Custom Typography Tokens
+// My Legal Guardian — Custom Typography Scale Tokens (Strict Sans-Serif)
 // ═══════════════════════════════════════════════════════════════════════════════
-// Used by custom primitives (LGTopBar, LGBadge, etc.) that reference LGType
-// directly instead of MaterialTheme.typography.
-// CRITICAL: FontFamily.SansSerif is hardcoded — never use FontFamily.Default
-// because it can resolve to Serif on some OEM ROMs.
+// Enforce modern, clean geometric Sans-Serif system-wide for every single style.
+// All styles enforce deliberate ~1.3–1.4x line-height ratios.
 
 object LGType {
 
-    // ── Headline: Screen titles, hero text ────────────────────────────────
-    val Headline = TextStyle(
+    // ── Display: Hero titles ("Ready to Scan", "Unlock Pro") ──────────────
+    val Display = TextStyle(
         fontFamily = FontFamily.SansSerif,
-        fontWeight = FontWeight.ExtraBold,
+        fontWeight = FontWeight.Bold,
         fontSize = 28.sp,
         lineHeight = 36.sp,
-        letterSpacing = (-0.25).sp
+        letterSpacing = (-0.3).sp
     )
 
-    // ── Title: Card headers, section titles ───────────────────────────────
+    // ── Headline: Section headers, major banners ──────────────────────────
+    val Headline = TextStyle(
+        fontFamily = FontFamily.SansSerif,
+        fontWeight = FontWeight.Bold,
+        fontSize = 22.sp,
+        lineHeight = 30.sp,
+        letterSpacing = (-0.2).sp
+    )
+
+    // ── Title: Card titles, primary section headers ───────────────────────
     val Title = TextStyle(
         fontFamily = FontFamily.SansSerif,
         fontWeight = FontWeight.Bold,
@@ -38,34 +45,52 @@ object LGType {
         fontFamily = FontFamily.SansSerif,
         fontWeight = FontWeight.SemiBold,
         fontSize = 15.sp,
-        lineHeight = 22.sp,
+        lineHeight = 20.sp,
         letterSpacing = 0.1.sp
     )
 
-    // ── Body: Descriptions, explanations ──────────────────────────────────
+    // ── Body: Descriptions, clause explanations ───────────────────────────
     val Body = TextStyle(
         fontFamily = FontFamily.SansSerif,
-        fontWeight = FontWeight.Medium,
+        fontWeight = FontWeight.Normal,
         fontSize = 14.sp,
-        lineHeight = 20.sp,
+        lineHeight = 21.sp,
         letterSpacing = 0.15.sp
     )
 
-    // ── Mono: Raw contract text snippets (intentionally Monospace) ────────
+    // ── BodySmall: Secondary descriptions, metadata lines ────────────────
+    val BodySmall = TextStyle(
+        fontFamily = FontFamily.SansSerif,
+        fontWeight = FontWeight.Normal,
+        fontSize = 13.sp,
+        lineHeight = 18.sp,
+        letterSpacing = 0.15.sp
+    )
+
+    // ── Label: Badges, button labels, uppercase indicators ────────────────
+    val Label = TextStyle(
+        fontFamily = FontFamily.SansSerif,
+        fontWeight = FontWeight.SemiBold,
+        fontSize = 11.sp,
+        lineHeight = 15.sp,
+        letterSpacing = 0.5.sp
+    )
+
+    // ── Caption: Small helper notes, timestamp text ───────────────────────
+    val Caption = TextStyle(
+        fontFamily = FontFamily.SansSerif,
+        fontWeight = FontWeight.Normal,
+        fontSize = 10.sp,
+        lineHeight = 14.sp,
+        letterSpacing = 0.2.sp
+    )
+
+    // ── Mono: Raw contract text snippets ──────────────────────────────────
     val Mono = TextStyle(
         fontFamily = FontFamily.Monospace,
         fontWeight = FontWeight.Medium,
         fontSize = 12.sp,
-        lineHeight = 18.sp,
+        lineHeight = 17.sp,
         letterSpacing = 0.sp
-    )
-
-    // ── Label: Badges, captions, metadata ─────────────────────────────────
-    val Label = TextStyle(
-        fontFamily = FontFamily.SansSerif,
-        fontWeight = FontWeight.Bold,
-        fontSize = 11.sp,
-        lineHeight = 16.sp,
-        letterSpacing = 0.5.sp
     )
 }

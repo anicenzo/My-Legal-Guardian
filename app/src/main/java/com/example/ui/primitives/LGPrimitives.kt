@@ -46,6 +46,13 @@ import androidx.compose.material3.Icon
 // My Legal Guardian — Premium UI Primitives
 // ═══════════════════════════════════════════════════════════════════════════════
 
+object LGSpacing {
+    val xs: Dp = 4.dp
+    val sm: Dp = 8.dp
+    val md: Dp = 16.dp
+    val lg: Dp = 24.dp
+    val xl: Dp = 32.dp
+}
 
 // ── Bottom Navigation ─────────────────────────────────────────────────────────
 @Composable
@@ -54,6 +61,7 @@ fun LGBottomNav(
     onNavigate: (String) -> Unit,
     modifier: Modifier = Modifier
 ) {
+    val colors = LocalLGColors.current
     val items = listOf(
         Triple("vault", "Vault", Icons.Filled.Folder),
         Triple("scan", "Scan", Icons.Filled.DocumentScanner),
@@ -62,9 +70,9 @@ fun LGBottomNav(
 
     Surface(
         modifier = modifier.fillMaxWidth(),
-        color = MaterialTheme.colorScheme.surface,
-        shadowElevation = 12.dp,
-        tonalElevation = 3.dp
+        color = colors.Surface,
+        shadowElevation = 8.dp,
+        tonalElevation = 0.dp
     ) {
         Column(
             modifier = Modifier
@@ -72,21 +80,21 @@ fun LGBottomNav(
                 .navigationBarsPadding()
         ) {
             HorizontalDivider(
-                color = MaterialTheme.colorScheme.outlineVariant.copy(alpha = 0.3f),
+                color = colors.Border.copy(alpha = 0.5f),
                 thickness = 0.5.dp
             )
             Row(
                 modifier = Modifier
                     .fillMaxWidth()
                     .height(68.dp)
-                    .padding(horizontal = 8.dp, vertical = 6.dp),
+                    .padding(horizontal = LGSpacing.sm, vertical = 6.dp),
                 horizontalArrangement = Arrangement.SpaceAround,
                 verticalAlignment = Alignment.CenterVertically
             ) {
                 items.forEach { (route, label, icon) ->
                     val isSelected = selectedRoute == route
-                    val activeColor = MaterialTheme.colorScheme.primary
-                    val inactiveColor = MaterialTheme.colorScheme.onSurfaceVariant.copy(alpha = 0.7f)
+                    val activeColor = colors.TextPrimary
+                    val inactiveColor = colors.TextSecondary
 
                     Column(
                         horizontalAlignment = Alignment.CenterHorizontally,
@@ -103,9 +111,9 @@ fun LGBottomNav(
                             modifier = Modifier
                                 .clip(RoundedCornerShape(12.dp))
                                 .background(
-                                    if (isSelected) activeColor.copy(alpha = 0.14f) else Color.Transparent
+                                    if (isSelected) activeColor.copy(alpha = 0.12f) else Color.Transparent
                                 )
-                                .padding(horizontal = 16.dp, vertical = 4.dp),
+                                .padding(horizontal = LGSpacing.md, vertical = 4.dp),
                             contentAlignment = Alignment.Center
                         ) {
                             Icon(
@@ -118,7 +126,7 @@ fun LGBottomNav(
                         Spacer(modifier = Modifier.height(2.dp))
                         Text(
                             text = label,
-                            style = MaterialTheme.typography.labelSmall.copy(
+                            style = LGType.Label.copy(
                                 fontWeight = if (isSelected) FontWeight.Bold else FontWeight.Medium,
                                 fontSize = 11.sp
                             ),
@@ -139,33 +147,41 @@ fun LGBottomNav(
 // FastOutSlowInEasing curve. Uses StrokeCap.Round for a polished look
 // and a subtle shadow beneath the circle for depth.
 
+fun severityColor(severity: Int): Color = when (severity) {
+    3    -> Color(0xFFFF4B4B)    // Modern Soft Coral/Red — High
+    2    -> Color(0xFFF9A825)    // Amber — Medium
+    else -> Color(0xFF2E7D32)    // Green — Low
+}
+
+fun severityLabel(severity: Int): String = when (severity) {
+    3    -> "HIGH"
+    2    -> "MEDIUM"
+    else -> "LOW"
+}
+
+fun riskBandColor(score: Int): Color = when {
+    score > 60 -> Color(0xFFFF4B4B)    // Soft Coral/Red #FF4B4B — High Risk
+    score > 30 -> Color(0xFFF9A825)    // Amber #F9A825 — Moderate Risk
+    else       -> Color(0xFF2E7D32)    // Green #2E7D32 — Low Risk
+}
+
+// ═══════════════════════════════════════════════════════════════════════════════
+// RISK GAUGE — Animated Circular Indicator with 360 Neutral Track
+// ═══════════════════════════════════════════════════════════════════════════════
+
 @Composable
 fun LGRiskGauge(score: Int, modifier: Modifier = Modifier) {
-    // ── Animated fill: starts at 0, eases to target score / full complete sweep
-    val animatedProgress by animateFloatAsState(
-        targetValue = 1f,
-        animationSpec = tween(
-            durationMillis = 1500,
-            easing = FastOutSlowInEasing
-        ),
-        label = "RiskGaugeAnimation"
-    )
-
     val animatedScore by animateFloatAsState(
         targetValue = score.toFloat(),
         animationSpec = tween(
-            durationMillis = 1500,
+            durationMillis = 1200,
             easing = FastOutSlowInEasing
         ),
         label = "RiskScoreNumberAnimation"
     )
 
-    // ── Dynamic color: Crimson for high, Amber for moderate, Emerald for low
-    val gaugeColor = when {
-        score > 60 -> Color(0xFFD90429)    // Vivid Crimson — high risk
-        score > 30 -> Color(0xFFE9A319)    // Rich Amber — moderate risk
-        else       -> Color(0xFF2A9D8F)    // Emerald Green — low risk
-    }
+    // Dynamic color derived strictly from severity band
+    val gaugeColor = riskBandColor(score)
 
     val riskLabel = when {
         score > 60 -> "HIGH RISK"
@@ -173,15 +189,15 @@ fun LGRiskGauge(score: Int, modifier: Modifier = Modifier) {
         else       -> "LOW RISK · SAFE"
     }
 
-    // ── Track background color (adapts to theme) ─────────────────────────
-    val trackColor = LocalLGColors.current.Border.copy(alpha = 0.35f)
+    // ── Neutral track background color ─────────────────────────
+    val trackColor = LocalLGColors.current.Border.copy(alpha = 0.45f)
 
-    // ── Outer container with subtle shadow for depth ─────────────────────
+    // ── Outer container ─────────────────────
     Box(
         modifier = modifier
             .size(160.dp)
             .shadow(
-                elevation = 8.dp,
+                elevation = 4.dp,
                 shape = CircleShape,
                 ambientColor = gaugeColor.copy(alpha = 0.15f),
                 spotColor = gaugeColor.copy(alpha = 0.10f)
@@ -189,28 +205,24 @@ fun LGRiskGauge(score: Int, modifier: Modifier = Modifier) {
         contentAlignment = Alignment.Center
     ) {
         // ── Arc Canvas ───────────────────────────────────────────────────
-        Canvas(modifier = Modifier.fillMaxSize().padding(8.dp)) {
-            val strokeWidth = 14.dp.toPx()
+        Canvas(modifier = Modifier.fillMaxSize().padding(10.dp)) {
+            val strokeWidth = 12.dp.toPx()
 
-            // Background track — full arc sweep
+            // Full 360° neutral-gray background track
             drawArc(
                 color = trackColor,
-                startAngle = 135f,
-                sweepAngle = 270f,
+                startAngle = 0f,
+                sweepAngle = 360f,
                 useCenter = false,
                 style = Stroke(width = strokeWidth, cap = StrokeCap.Round)
             )
 
-            // Filled score arc — For low scores (<=30), sweeps complete 270f green circle for a sound, confident seal
-            val effectiveSweep = if (score <= 30) {
-                270f * animatedProgress
-            } else {
-                270f * (animatedScore / 100f).coerceIn(0.1f, 1f)
-            }
+            // Filled score arc: sweeps from top (-90°) proportional to 0-100 score
+            val effectiveSweep = (animatedScore / 100f).coerceIn(if (score == 0) 0f else 0.04f, 1f) * 360f
 
             drawArc(
                 color = gaugeColor,
-                startAngle = 135f,
+                startAngle = -90f,
                 sweepAngle = effectiveSweep,
                 useCenter = false,
                 style = Stroke(width = strokeWidth, cap = StrokeCap.Round)
@@ -221,35 +233,23 @@ fun LGRiskGauge(score: Int, modifier: Modifier = Modifier) {
         Column(horizontalAlignment = Alignment.CenterHorizontally) {
             Text(
                 text = "${animatedScore.toInt()}",
-                style = MaterialTheme.typography.headlineLarge,
+                style = LGType.Headline.copy(
+                    fontSize = 32.sp,
+                    fontWeight = FontWeight.Bold
+                ),
                 color = gaugeColor
             )
             Text(
                 text = riskLabel,
-                style = MaterialTheme.typography.labelSmall,
+                style = LGType.Label.copy(
+                    fontSize = 11.sp,
+                    fontWeight = FontWeight.SemiBold
+                ),
                 color = LocalLGColors.current.TextSecondary,
                 letterSpacing = 1.2.sp
             )
         }
     }
-}
-
-
-// ═══════════════════════════════════════════════════════════════════════════════
-// SEVERITY UTILITIES — Colors & Labels
-// ═══════════════════════════════════════════════════════════════════════════════
-// Used by RedFlagCard and LGBadge to dynamically style risk indicators.
-
-fun severityColor(severity: Int): Color = when (severity) {
-    3    -> Color(0xFFD90429)    // Vivid Crimson — HIGH
-    2    -> Color(0xFFE9A319)    // Rich Amber — MEDIUM
-    else -> Color(0xFF2A9D8F)   // Emerald Green — LOW
-}
-
-fun severityLabel(severity: Int): String = when (severity) {
-    3    -> "HIGH"
-    2    -> "MEDIUM"
-    else -> "LOW"
 }
 
 
@@ -268,12 +268,12 @@ fun LGBadge(
     Box(
         modifier = modifier
             .background(color, RoundedCornerShape(percent = 50))  // Pill shape
-            .padding(horizontal = 12.dp, vertical = 6.dp),
+            .padding(horizontal = 12.dp, vertical = 5.dp),
         contentAlignment = Alignment.Center
     ) {
         Text(
             text = text,
-            style = MaterialTheme.typography.labelSmall.copy(
+            style = LGType.Label.copy(
                 color = Color.White,
                 fontWeight = FontWeight.Bold,
                 letterSpacing = 0.5.sp
@@ -310,7 +310,7 @@ fun Modifier.lgPressClickable(
 
 
 // ═══════════════════════════════════════════════════════════════════════════════
-// LG SURFACE — Elevated card container with theme-adaptive styling
+// LG SURFACE — Elevated Soft UI card container with theme-adaptive styling
 // ═══════════════════════════════════════════════════════════════════════════════
 
 @Composable
@@ -322,16 +322,16 @@ fun LGSurface(
 ) {
     val colors = LocalLGColors.current
     val isDark = colors == LGColorsDark
-    val shape = RoundedCornerShape(16.dp)
+    val shape = RoundedCornerShape(24.dp)  // 24dp Soft UI radius
 
     val borderModifier = if (isDark) {
         Modifier.border(1.dp, colors.Border, shape)
     } else {
         Modifier.shadow(
-            elevation = 6.dp,
+            elevation = 3.dp,
             shape = shape,
-            ambientColor = Color.Black.copy(alpha = 0.08f),
-            spotColor = Color.Black.copy(alpha = 0.08f)
+            ambientColor = Color.Black.copy(alpha = 0.05f),
+            spotColor = Color.Black.copy(alpha = 0.05f)
         )
     }
 
@@ -348,7 +348,7 @@ fun LGSurface(
 
 
 // ═══════════════════════════════════════════════════════════════════════════════
-// LG BUTTON — Primary action button with press-scale micro-interaction
+// LG BUTTON — Soft UI action button with elevation, ripple, and press-scale
 // ═══════════════════════════════════════════════════════════════════════════════
 
 @Composable
@@ -362,21 +362,41 @@ fun LGButton(
     content: @Composable RowScope.() -> Unit
 ) {
     val colors = LocalLGColors.current
-    val shape = RoundedCornerShape(12.dp)  // 12dp radius per design spec
+    val shape = RoundedCornerShape(24.dp)  // 24dp Soft UI radius
+
+    val interactionSource = remember { MutableInteractionSource() }
+    val isPressed by interactionSource.collectIsPressedAsState()
+    val scale by animateFloatAsState(if (isPressed) 0.97f else 1.0f, label = "scale")
 
     val buttonModifier = if (filled) {
-        Modifier.background(color, shape)
+        Modifier
+            .shadow(
+                elevation = if (isPressed) 2.dp else 4.dp,
+                shape = shape,
+                ambientColor = color.copy(alpha = 0.15f),
+                spotColor = color.copy(alpha = 0.10f)
+            )
+            .background(color, shape)
     } else {
-        Modifier.border(1.dp, color, shape)
+        Modifier
+            .background(colors.Surface, shape)
+            .border(1.5.dp, colors.Border, shape)
     }
 
     Box(
         modifier = modifier
             .semantics { role = Role.Button }
-            .defaultMinSize(minWidth = 48.dp, minHeight = 48.dp)  // Accessibility touch target
+            .defaultMinSize(minWidth = 64.dp, minHeight = 56.dp)
+            .scale(scale)
             .then(buttonModifier)
-            .lgPressClickable(enabled = enabled, onClick = onClick)
-            .padding(horizontal = 16.dp, vertical = 12.dp),
+            .clip(shape)
+            .clickable(
+                interactionSource = interactionSource,
+                indication = androidx.compose.material3.ripple(),
+                enabled = enabled,
+                onClick = onClick
+            )
+            .padding(horizontal = 24.dp, vertical = 16.dp),
         contentAlignment = Alignment.Center
     ) {
         Row(
@@ -386,7 +406,7 @@ fun LGButton(
             val resolvedTextColor = textColor ?: if (filled) {
                 if (color == colors.TextPrimary) colors.Background else Color.White
             } else {
-                color
+                colors.TextPrimary
             }
 
             CompositionLocalProvider(
@@ -415,8 +435,8 @@ fun LGTextField(
     val isDark = colors == LGColorsDark
     var isFocused by remember { mutableStateOf(false) }
 
-    val backgroundColor = if (isDark) Color(0xFF21262D) else colors.Surface
-    val shape = RoundedCornerShape(12.dp)
+    val backgroundColor = if (isDark) colors.Surface else colors.Surface
+    val shape = RoundedCornerShape(20.dp)
 
     val borderStroke = if (isFocused) {
         BorderStroke(1.5.dp, colors.TrustBlue)

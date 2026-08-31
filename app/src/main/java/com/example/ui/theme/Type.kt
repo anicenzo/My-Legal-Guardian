@@ -87,21 +87,21 @@ val Typography = Typography(
         fontFamily = FontFamily.SansSerif,
         fontWeight = FontWeight.Normal,
         fontSize = 16.sp,
-        lineHeight = 24.sp,
+        lineHeight = 28.sp,      // ↑ Increased from 24sp for legibility in analysis blocks
         letterSpacing = 0.25.sp
     ),
     bodyMedium = TextStyle(
         fontFamily = FontFamily.SansSerif,
         fontWeight = FontWeight.Medium,
         fontSize = 14.sp,
-        lineHeight = 20.sp,
+        lineHeight = 24.sp,      // ↑ Increased from 20sp for legibility
         letterSpacing = 0.15.sp
     ),
     bodySmall = TextStyle(
         fontFamily = FontFamily.SansSerif,
         fontWeight = FontWeight.Normal,
         fontSize = 12.sp,
-        lineHeight = 18.sp,
+        lineHeight = 20.sp,      // ↑ Increased from 18sp for legibility
         letterSpacing = 0.25.sp
     ),
 

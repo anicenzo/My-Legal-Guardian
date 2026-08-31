@@ -18,8 +18,8 @@ import androidx.compose.ui.graphics.Color
 // that need direct access to design tokens outside of MaterialTheme.
 
 private val DarkColorScheme = darkColorScheme(
-    primary = NavyPrimary,
-    onPrimary = SoftWhiteText,
+    primary = Color(0xFF2E7D32),            // Green #2E7D32 primary accent
+    onPrimary = Color.White,
     primaryContainer = NavyContainerDark,
     onPrimaryContainer = NavyOnContainerDark,
     secondary = EmeraldSafe,
@@ -29,41 +29,45 @@ private val DarkColorScheme = darkColorScheme(
     tertiary = CrimsonRisk,
     onTertiary = SoftWhiteText,
     error = CrimsonRisk,
-    onError = SoftWhiteText,
+    onError = Color.White,
     errorContainer = CrimsonContainerDark,
     onErrorContainer = CrimsonOnContainerDark,
-    background = CharcoalCanvas,
+    background = CharcoalCanvas,            // #121212 dark background
     onBackground = SoftWhiteText,
-    surface = ElevatedCardDark,
+    surface = ElevatedCardDark,             // #1E1E1E dark card surface
     onSurface = SoftWhiteText,
-    surfaceVariant = Color(0xFF21262D),
-    onSurfaceVariant = SubtextDark,
+    surfaceVariant = Color(0xFF1E1E1E),     // #1E1E1E
+    onSurfaceVariant = Color(0xFF9E9E9E),
     surfaceTint = Color.Transparent,
-    outline = SlateBorderDark
+    outline = SlateBorderDark,             // #2C2C2C
+    outlineVariant = Color(0xFF2C2C2C),
+    surfaceContainerHighest = Color(0xFF252525)
 )
 
 private val LightColorScheme = lightColorScheme(
-    primary = NavyPrimary,
+    primary = NavyPrimary,                  // Navy #0A192F
     onPrimary = Color.White,
     primaryContainer = NavyContainerLight,
     onPrimaryContainer = NavyOnContainerLight,
-    secondary = EmeraldSafe,
+    secondary = EmeraldSafe,                // Green #2E7D32
     onSecondary = Color.White,
     secondaryContainer = EmeraldContainerLight,
     onSecondaryContainer = EmeraldOnContainerLight,
-    tertiary = CrimsonRisk,
+    tertiary = CrimsonRisk,                 // Red #D32F2F
     onTertiary = Color.White,
     error = CrimsonRisk,
     onError = Color.White,
     errorContainer = CrimsonContainerLight,
     onErrorContainer = CrimsonOnContainerLight,
-    background = OffWhiteBackground,
+    background = OffWhiteBackground,        // Cream #F9F9F7
     onBackground = DeepSlateText,
-    surface = WhiteCard,
+    surface = WhiteCard,                    // White
     onSurface = DeepSlateText,
-    surfaceVariant = Color(0xFFEEF0F4),
+    surfaceVariant = Color(0xFFF2F2EE),
     onSurfaceVariant = SubtextLight,
-    outline = SlateBorderLight
+    outline = SlateBorderLight,             // #E2E4E0
+    outlineVariant = Color(0xFFE2E4E0),
+    surfaceContainerHighest = Color(0xFFF2F2EE)
 )
 
 @Composable

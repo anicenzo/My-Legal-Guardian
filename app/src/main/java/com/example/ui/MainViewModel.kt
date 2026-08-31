@@ -69,6 +69,7 @@ class MainViewModel(
 ) : AndroidViewModel(application) {
     private val _uiState = MutableStateFlow<AuditState>(AuditState.Idle)
     val uiState: StateFlow<AuditState> = _uiState.asStateFlow()
+    val auditState: StateFlow<AuditState> = _uiState.asStateFlow()
 
     private val _isDarkMode = MutableStateFlow(false)
     val isDarkMode: StateFlow<Boolean> = _isDarkMode.asStateFlow()
@@ -114,6 +115,24 @@ class MainViewModel(
 
             override fun onError(error: QonversionError) {
                 // Keep default or retry on paywall open
+            }
+        })
+    }
+
+    fun restorePurchases(
+        context: Context,
+        onSuccess: () -> Unit,
+        onError: (String) -> Unit
+    ) {
+        Qonversion.shared.restore(object : QonversionEntitlementsCallback {
+            override fun onSuccess(entitlements: Map<String, QEntitlement>) {
+                val premium = entitlements[com.example.Constants.PRO_ENTITLEMENT_ID]
+                isProUser.value = premium?.isActive == true
+                onSuccess()
+            }
+
+            override fun onError(error: QonversionError) {
+                onError(error.description)
             }
         })
     }
@@ -200,13 +219,7 @@ class MainViewModel(
                 }
                 _uiState.value = AuditState.Analyzing
                 val result = legalAuditEngine.analyzeContract(extractedText)
-                val calculatedScore = minOf(100, result.matchedRedFlags.sumOf { 
-                    when (it.severity) {
-                        3 -> 30
-                        2 -> 15
-                        else -> 5
-                    }
-                })
+                val calculatedScore = result.overallRiskScore
 
                 val drafts = result.matchedRedFlags.associate { flag ->
                     flag.displayName to com.example.engine.NegotiationTemplateEngine.generateDraft(
@@ -319,13 +332,7 @@ class MainViewModel(
                 val missingList = missingProtections.filter { !it.isPresent }.map { it.protectionType }
                 val draftsMap = drafts.associate { it.clauseId to it.draftText }
 
-                val calculatedScore = minOf(100, redFlags.sumOf {
-                    when (it.severity) {
-                        3 -> 30
-                        2 -> 15
-                        else -> 5
-                    }
-                })
+                val calculatedScore = com.example.engine.AuditResult.calculateRiskScore(redFlags, missingList)
 
                 _uiState.value = AuditState.Result(
                     documentId = document.id,

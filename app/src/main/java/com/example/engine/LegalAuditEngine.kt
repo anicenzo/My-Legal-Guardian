@@ -19,16 +19,60 @@ data class MatchedRedFlag(
 data class AuditResult(
     val missingMandatoryClauses: List<String>,
     val matchedRedFlags: List<MatchedRedFlag>,
-    val isHighRisk: Boolean
+    val isHighRisk: Boolean,
+    val overallRiskScore: Int = calculateRiskScore(matchedRedFlags, missingMandatoryClauses)
 ) {
     val predatoryClauseCount: Int get() = matchedRedFlags.size
     val predatoryClausesFound: Int get() = matchedRedFlags.size
     val missingClauses: List<String> get() = missingMandatoryClauses
+
+    companion object {
+        fun calculateRiskScore(
+            matchedRedFlags: List<MatchedRedFlag>,
+            missingMandatoryClauses: List<String>
+        ): Int {
+            if (matchedRedFlags.isEmpty() && missingMandatoryClauses.isEmpty()) {
+                return 0
+            }
+
+            // 1. Predatory clauses dominate the score
+            val predatoryScore = matchedRedFlags.sumOf { flag ->
+                when (flag.severity) {
+                    3 -> 35
+                    2 -> 15
+                    else -> 8
+                }
+            }
+
+            // 2. Missing mandatory safeguards act as secondary modifiers (capped at 20)
+            val missingSafeguardsScore = minOf(20, missingMandatoryClauses.size * 5)
+
+            val baseScore = predatoryScore + missingSafeguardsScore
+
+            // 3. Severity floor: if any detected clause is tagged HIGH severity (severity >= 3)
+            // in financial-forfeiture family or high-risk category, score cannot resolve below 65 (High Risk band)
+            val hasHighSeverity = matchedRedFlags.any { it.severity >= 3 }
+            val scoreWithFloor = if (hasHighSeverity) {
+                maxOf(65, baseScore)
+            } else {
+                baseScore
+            }
+
+            return scoreWithFloor.coerceIn(0, 100)
+        }
+    }
 }
 
 class LegalAuditEngine(private val context: Context) {
     private var interpreter: InterpreterApi? = null
     private val vocabMap = mutableMapOf<String, Int>()
+
+    companion object {
+        fun calculateRiskScore(
+            matchedRedFlags: List<MatchedRedFlag>,
+            missingMandatoryClauses: List<String>
+        ): Int = AuditResult.calculateRiskScore(matchedRedFlags, missingMandatoryClauses)
+    }
 
     // Standard mandatory safeguards (Opt-In Detection)
     private val mandatorySafeguards = listOf(
@@ -168,19 +212,21 @@ class LegalAuditEngine(private val context: Context) {
         val flags = mutableListOf<MatchedRedFlag>()
         
         val rules = listOf(
-            Rule(listOf("non-refundable", "forfeit deposit", "no refund", "forfeited"), 
+            Rule(listOf("non-refundable", "strictly non-refundable", "nonrefundable", "forfeit deposit", "no refund", "forfeited", "deposit is non-refundable"), 
                  "Non-Refundable Deposit", 3, "This clause implies you cannot get your money back under any circumstances."),
-            Rule(listOf("early termination fee", "liquidated damages", "termination penalty"), 
+            Rule(listOf("early termination fee", "liquidated damages", "termination penalty", "penalty for early termination", "break lease penalty"), 
                  "Early Termination Penalty", 3, "Imposes severe financial penalties for ending the contract early."),
-            Rule(listOf("months' rent"), 
-                 "Multi-Month Penalty", 2, "Requires paying multiple months of rent if terminated early."),
-            Rule(listOf("late fee", "5 days", "10%", "interest on late"), 
+            Rule(listOf("prepaid rent shall be forfeited", "forfeit prepaid rent", "forfeiture of advance rent"), 
+                 "Prepaid Rent Forfeiture", 3, "Forces forfeiture of advance or prepaid rent upon departure."),
+            Rule(listOf("months' rent", "months rent", "remaining months", "all remaining rent"), 
+                 "Multi-Month Penalty", 3, "Requires paying multiple months of rent if terminated early."),
+            Rule(listOf("late fee", "5 days", "10%", "interest on late", "daily late charge"), 
                  "Late Fee Clause", 2, "Specifies penalties or high interest for late payments."),
-            Rule(listOf("modify building policies", "right to change fees", "sole discretion to amend"), 
+            Rule(listOf("modify building policies", "right to change fees", "sole discretion to amend", "modify rules without notice"), 
                  "Unilateral Modification", 3, "Allows the landlord/provider to change rules or fees without your consent."),
-            Rule(listOf("waives any claim", "consequential damages", "hold harmless"), 
+            Rule(listOf("waives any claim", "consequential damages", "hold harmless", "waive all claims", "indemnify and hold harmless"), 
                  "Liability Waiver", 3, "Forces you to give up your rights to sue or claim damages."),
-            Rule(listOf("resolved exclusively through arbitration", "arbitrator selected by landlord", "class action waiver"), 
+            Rule(listOf("resolved exclusively through arbitration", "arbitrator selected by landlord", "class action waiver", "waive right to jury trial"), 
                  "Forced Arbitration", 3, "Prevents you from taking disputes to court, forcing private arbitration.")
         )
         

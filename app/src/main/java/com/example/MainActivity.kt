@@ -15,6 +15,8 @@ import com.example.engine.LegalAuditEngine
 import com.example.engine.ScannerEngine
 import com.example.ui.HomeScreen
 import com.example.ui.MainViewModel
+import com.example.ui.PaywallBottomSheet
+import com.example.ui.SettingsScreen
 import com.example.ui.VaultScreen
 import com.example.ui.primitives.LGBottomNav
 import com.example.ui.primitives.LocalLGColors
@@ -37,9 +39,18 @@ class MainActivity : ComponentActivity() {
         setContent {
             val isDarkMode by viewModel.isDarkMode.collectAsState()
             var selectedRoute by remember { mutableStateOf("scan") }
+            var showPaywall by remember { mutableStateOf(false) }
 
             MyLegalGuardianTheme(darkTheme = isDarkMode) {
                 val colors = LocalLGColors.current
+
+                if (showPaywall) {
+                    PaywallBottomSheet(
+                        onDismiss = { showPaywall = false },
+                        viewModel = viewModel
+                    )
+                }
+
                 Scaffold(
                     modifier = Modifier.fillMaxSize(),
                     bottomBar = {
@@ -62,6 +73,10 @@ class MainActivity : ComponentActivity() {
                                 viewModel = viewModel,
                                 onOpenDocument = { selectedRoute = "scan" },
                                 onScanClick = { selectedRoute = "scan" }
+                            )
+                            "settings" -> SettingsScreen(
+                                viewModel = viewModel,
+                                onPurchaseClick = { showPaywall = true }
                             )
                             else -> HomeScreen(
                                 viewModel = viewModel

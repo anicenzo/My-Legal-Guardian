@@ -94,6 +94,9 @@ private fun PaywallContent(
         viewModel.loadProducts()
     }
 
+    val colors = com.example.ui.primitives.LocalLGColors.current
+    val isDark = colors == com.example.ui.primitives.LGColorsDark
+
     Column(
         modifier = Modifier
             .fillMaxWidth()
@@ -101,51 +104,50 @@ private fun PaywallContent(
             .padding(horizontal = 24.dp)
             .padding(bottom = 32.dp),
         horizontalAlignment = Alignment.CenterHorizontally,
-        verticalArrangement = Arrangement.spacedBy(16.dp)  // Eliminates manual Spacers
+        verticalArrangement = Arrangement.spacedBy(18.dp)
     ) {
         // ═════════════════════════════════════════════════════════════════
-        // Shield Icon — Gradient Navy background
+        // Shield Icon — Subtle Navy-to-Indigo Gradient Background
         // ═════════════════════════════════════════════════════════════════
         Box(
             modifier = Modifier
                 .size(72.dp)
-                .clip(RoundedCornerShape(20.dp))
+                .clip(RoundedCornerShape(24.dp))
                 .background(
-                    Brush.linearGradient(
-                        listOf(
-                            MaterialTheme.colorScheme.primary,
-                            MaterialTheme.colorScheme.primary.copy(alpha = 0.7f)
-                        )
-                    )
+                    if (isDark) {
+                        Brush.linearGradient(listOf(Color(0xFF1E2638), Color(0xFF161E2E)))
+                    } else {
+                        Brush.linearGradient(listOf(Color(0xFF0A192F), Color(0xFF1E3A5F)))
+                    }
                 ),
             contentAlignment = Alignment.Center
         ) {
             Icon(
                 imageVector = Icons.Filled.Shield,
                 contentDescription = "Pro",
-                tint = MaterialTheme.colorScheme.onPrimary,
+                tint = Color.White,
                 modifier = Modifier.size(36.dp)
             )
         }
 
         // ═════════════════════════════════════════════════════════════════
-        // Headline
+        // Headline (Strict Sans-Serif)
         // ═════════════════════════════════════════════════════════════════
         Text(
             text = "Unlock Pro for\nUnlimited Scans",
-            style = MaterialTheme.typography.headlineMedium.copy(
+            style = com.example.ui.primitives.LGType.Headline.copy(
                 fontWeight = FontWeight.Bold,
                 lineHeight = 32.sp
             ),
-            color = MaterialTheme.colorScheme.onSurface,
+            color = colors.TextPrimary,
             textAlign = TextAlign.Center
         )
 
         // ═════════════════════════════════════════════════════════════════
-        // Feature List — Emerald green checkmarks
+        // Feature List — Emerald green checkmarks & generous spacing
         // ═════════════════════════════════════════════════════════════════
         Column(
-            verticalArrangement = Arrangement.spacedBy(16.dp),  // Perfect spacing
+            verticalArrangement = Arrangement.spacedBy(16.dp),
             modifier = Modifier.fillMaxWidth()
         ) {
             FeatureBullet(icon = Icons.Filled.CheckCircle, text = "Unlimited offline scans")
@@ -155,37 +157,33 @@ private fun PaywallContent(
         }
 
         // ═════════════════════════════════════════════════════════════════
-        // Price Card
+        // Price Disclosure (Plain text, no card chrome per spec)
         // ═════════════════════════════════════════════════════════════════
-        Surface(
-            color = MaterialTheme.colorScheme.primaryContainer.copy(alpha = 0.5f),
-            shape = RoundedCornerShape(12.dp),
-            modifier = Modifier.fillMaxWidth()
+        Column(
+            modifier = Modifier.fillMaxWidth(),
+            horizontalAlignment = Alignment.CenterHorizontally
         ) {
-            Column(
-                modifier = Modifier.padding(16.dp),
-                horizontalAlignment = Alignment.CenterHorizontally
-            ) {
-                Text(
-                    text = proPrice ?: "$4.99/month",
-                    style = MaterialTheme.typography.titleLarge.copy(
-                        fontWeight = FontWeight.Bold
-                    ),
-                    color = MaterialTheme.colorScheme.onSurface
-                )
-                Spacer(modifier = Modifier.height(4.dp))
-                Text(
-                    text = "Cancel anytime · No commitment",
-                    style = MaterialTheme.typography.labelMedium,
-                    color = MaterialTheme.colorScheme.onSurfaceVariant
-                )
-            }
+            Text(
+                text = proPrice ?: "$4.99/month",
+                style = com.example.ui.primitives.LGType.Title.copy(
+                    fontWeight = FontWeight.Bold,
+                    fontSize = 20.sp
+                ),
+                color = colors.TextPrimary
+            )
+            Spacer(modifier = Modifier.height(2.dp))
+            Text(
+                text = "Cancel anytime · No commitment",
+                style = com.example.ui.primitives.LGType.Caption.copy(
+                    fontSize = 12.sp
+                ),
+                color = colors.TextSecondary
+            )
         }
 
         // ═════════════════════════════════════════════════════════════════
-        // CTA Button — Navy Blue, 12dp radius, 48dp+ touch target
+        // CTA Button — Navy/Dark, 24dp radius, 56dp touch target
         // ═════════════════════════════════════════════════════════════════
-        // Business logic (Qonversion purchase flow) is UNCHANGED.
         Button(
             onClick = {
                 val activity = context.findActivity()
@@ -226,27 +224,33 @@ private fun PaywallContent(
             },
             modifier = Modifier
                 .fillMaxWidth()
-                .defaultMinSize(minHeight = 48.dp)   // Accessibility touch target
+                .defaultMinSize(minHeight = 56.dp)
                 .height(56.dp),
-            shape = RoundedCornerShape(12.dp),         // 12dp radius per design spec
-            colors = ButtonDefaults.buttonColors(
-                containerColor = MaterialTheme.colorScheme.primary  // Deep Navy Blue
+            shape = RoundedCornerShape(24.dp),
+            colors = ButtonDefaults.elevatedButtonColors(
+                containerColor = if (isDark) Color(0xFF2E7D32) else Color(0xFF0A192F),
+                contentColor = Color.White
+            ),
+            elevation = ButtonDefaults.buttonElevation(
+                defaultElevation = 3.dp,
+                pressedElevation = 1.dp
             ),
             enabled = !isLoading
         ) {
             if (isLoading) {
                 CircularProgressIndicator(
                     modifier = Modifier.size(22.dp),
-                    color = MaterialTheme.colorScheme.onPrimary,
+                    color = Color.White,
                     strokeWidth = 2.dp
                 )
             } else {
                 Text(
                     text = "Unlock Pro",
-                    style = MaterialTheme.typography.titleMedium.copy(
-                        fontWeight = FontWeight.Bold
-                    ),
-                    color = MaterialTheme.colorScheme.onPrimary
+                    style = com.example.ui.primitives.LGType.Title.copy(
+                        fontSize = 16.sp,
+                        fontWeight = FontWeight.Bold,
+                        color = Color.White
+                    )
                 )
             }
         }
@@ -260,34 +264,37 @@ private fun PaywallContent(
 
 @Composable
 private fun FeatureBullet(icon: ImageVector, text: String) {
+    val colors = com.example.ui.primitives.LocalLGColors.current
+
     Row(
         modifier = Modifier
             .fillMaxWidth()
-            .defaultMinSize(minHeight = 48.dp),  // Accessible touch target
+            .defaultMinSize(minHeight = 48.dp),
         verticalAlignment = Alignment.CenterVertically
     ) {
-        // ── Emerald green icon container ─────────────────────────────────
+        // ── Green accent checkmark container ─────────────────────────
         Box(
             modifier = Modifier
                 .size(32.dp)
                 .clip(RoundedCornerShape(8.dp))
-                .background(MaterialTheme.colorScheme.secondary.copy(alpha = 0.12f)),
+                .background(colors.AccentSafe.copy(alpha = 0.12f)),
             contentAlignment = Alignment.Center
         ) {
             Icon(
                 imageVector = icon,
                 contentDescription = null,
-                tint = MaterialTheme.colorScheme.secondary,  // Emerald Green
+                tint = colors.AccentSafe,
                 modifier = Modifier.size(18.dp)
             )
         }
         Spacer(modifier = Modifier.width(14.dp))
         Text(
             text = text,
-            style = MaterialTheme.typography.bodyLarge.copy(
-                fontWeight = FontWeight.Medium
+            style = com.example.ui.primitives.LGType.Body.copy(
+                fontWeight = FontWeight.Medium,
+                fontSize = 15.sp
             ),
-            color = MaterialTheme.colorScheme.onSurface
+            color = colors.TextPrimary
         )
     }
 }

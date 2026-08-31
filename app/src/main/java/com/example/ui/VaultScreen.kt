@@ -22,6 +22,9 @@ import androidx.compose.ui.text.style.TextOverflow
 import androidx.compose.ui.unit.dp
 import androidx.compose.ui.unit.sp
 import com.example.data.db.DocumentEntity
+import com.example.ui.primitives.LGColorsDark
+import com.example.ui.primitives.LGColorsLight
+import com.example.ui.primitives.LGType
 import com.example.ui.primitives.LocalLGColors
 import com.example.ui.primitives.lgPressClickable
 import java.text.SimpleDateFormat
@@ -38,44 +41,45 @@ fun VaultScreen(
     val isDarkMode by viewModel.isDarkMode.collectAsState()
     val savedDocs by viewModel.savedDocuments.collectAsState(initial = emptyList())
     val colors = LocalLGColors.current
+    val isDark = colors == LGColorsDark
 
     Column(
         modifier = modifier
             .fillMaxSize()
-            .background(MaterialTheme.colorScheme.background)
+            .background(colors.Background)
     ) {
         // ── Top App Bar ──────────────────────────────────────────────────────
         Surface(
-            color = MaterialTheme.colorScheme.primary,
+            color = colors.HeaderBackground,
             modifier = Modifier.fillMaxWidth(),
-            shadowElevation = 6.dp
+            shadowElevation = 4.dp
         ) {
             Row(
                 modifier = Modifier
                     .statusBarsPadding()
-                    .padding(horizontal = 24.dp, vertical = 16.dp),
+                    .padding(horizontal = com.example.ui.primitives.LGSpacing.lg, vertical = com.example.ui.primitives.LGSpacing.md),
                 verticalAlignment = Alignment.CenterVertically
             ) {
                 Icon(
                     imageVector = Icons.Filled.FolderSpecial,
                     contentDescription = "Vault",
-                    tint = MaterialTheme.colorScheme.onPrimary,
-                    modifier = Modifier.size(28.dp)
+                    tint = colors.HeaderContent,
+                    modifier = Modifier.size(26.dp)
                 )
-                Spacer(modifier = Modifier.width(12.dp))
+                Spacer(modifier = Modifier.width(com.example.ui.primitives.LGSpacing.sm))
                 Column {
                     Text(
                         text = "Encrypted Vault",
-                        style = MaterialTheme.typography.titleLarge.copy(
-                            fontFamily = FontFamily.SansSerif,
-                            fontWeight = FontWeight.Bold
-                        ),
-                        color = MaterialTheme.colorScheme.onPrimary
+                        style = LGType.Title.copy(
+                            fontWeight = FontWeight.Bold,
+                            color = colors.HeaderContent
+                        )
                     )
                     Text(
                         text = "100% On-Device Local History",
-                        style = MaterialTheme.typography.labelSmall,
-                        color = MaterialTheme.colorScheme.onPrimary.copy(alpha = 0.8f)
+                        style = LGType.Caption.copy(
+                            color = colors.HeaderContent.copy(alpha = 0.8f)
+                        )
                     )
                 }
                 Spacer(modifier = Modifier.weight(1f))
@@ -83,14 +87,14 @@ fun VaultScreen(
                     modifier = Modifier
                         .size(36.dp)
                         .clip(CircleShape)
-                        .background(MaterialTheme.colorScheme.onPrimary.copy(alpha = 0.12f))
+                        .background(colors.HeaderContent.copy(alpha = 0.12f))
                         .clickable { viewModel.toggleTheme() },
                     contentAlignment = Alignment.Center
                 ) {
                     Icon(
                         imageVector = if (isDarkMode) Icons.Filled.LightMode else Icons.Filled.DarkMode,
                         contentDescription = "Theme Toggle",
-                        tint = MaterialTheme.colorScheme.onPrimary,
+                        tint = colors.HeaderContent,
                         modifier = Modifier.size(20.dp)
                     )
                 }
@@ -103,14 +107,14 @@ fun VaultScreen(
             Box(
                 modifier = Modifier
                     .fillMaxSize()
-                    .padding(32.dp),
+                    .padding(24.dp),
                 contentAlignment = Alignment.Center
             ) {
                 ElevatedCard(
                     modifier = Modifier.fillMaxWidth(),
                     shape = RoundedCornerShape(24.dp),
                     colors = CardDefaults.elevatedCardColors(
-                        containerColor = MaterialTheme.colorScheme.surface
+                        containerColor = colors.Surface
                     ),
                     elevation = CardDefaults.elevatedCardElevation(defaultElevation = 2.dp)
                 ) {
@@ -121,39 +125,67 @@ fun VaultScreen(
                         Box(
                             modifier = Modifier
                                 .size(72.dp)
-                                .clip(CircleShape)
-                                .background(MaterialTheme.colorScheme.primary.copy(alpha = 0.1f)),
+                                .clip(RoundedCornerShape(24.dp))
+                                .background(
+                                    if (isDark) {
+                                        androidx.compose.ui.graphics.Brush.linearGradient(
+                                            listOf(Color(0xFF1E2638), Color(0xFF161E2E))
+                                        )
+                                    } else {
+                                        androidx.compose.ui.graphics.Brush.linearGradient(
+                                            listOf(Color(0xFF0A192F), Color(0xFF1E3A5F))
+                                        )
+                                    }
+                                ),
                             contentAlignment = Alignment.Center
                         ) {
                             Icon(
                                 imageVector = Icons.Filled.FolderOpen,
                                 contentDescription = null,
-                                tint = MaterialTheme.colorScheme.primary,
+                                tint = Color.White,
                                 modifier = Modifier.size(36.dp)
                             )
                         }
                         Spacer(modifier = Modifier.height(16.dp))
                         Text(
                             text = "Vault is Empty",
-                            style = MaterialTheme.typography.titleMedium.copy(fontWeight = FontWeight.Bold),
-                            color = MaterialTheme.colorScheme.onSurface
+                            style = LGType.Title.copy(fontWeight = FontWeight.Bold),
+                            color = colors.TextPrimary
                         )
                         Spacer(modifier = Modifier.height(8.dp))
                         Text(
                             text = "Audited contracts are securely saved here offline for easy reference and renegotiation.",
-                            style = MaterialTheme.typography.bodySmall,
-                            color = MaterialTheme.colorScheme.onSurfaceVariant,
+                            style = LGType.BodySmall,
+                            color = colors.TextSecondary,
                             textAlign = androidx.compose.ui.text.style.TextAlign.Center
                         )
                         Spacer(modifier = Modifier.height(24.dp))
                         Button(
                             onClick = onScanClick,
-                            shape = RoundedCornerShape(12.dp),
-                            colors = ButtonDefaults.buttonColors(containerColor = MaterialTheme.colorScheme.primary)
+                            modifier = Modifier
+                                .fillMaxWidth()
+                                .defaultMinSize(minHeight = 56.dp)
+                                .height(56.dp),
+                            shape = RoundedCornerShape(24.dp),
+                            colors = ButtonDefaults.elevatedButtonColors(
+                                containerColor = if (isDark) Color(0xFF2E7D32) else Color(0xFF0A192F),
+                                contentColor = Color.White
+                            ),
+                            elevation = ButtonDefaults.buttonElevation(
+                                defaultElevation = 3.dp,
+                                pressedElevation = 1.dp
+                            )
                         ) {
-                            Icon(imageVector = Icons.Filled.Add, contentDescription = null)
+                            Icon(imageVector = Icons.Filled.Add, contentDescription = null, tint = Color.White)
                             Spacer(modifier = Modifier.width(8.dp))
-                            Text(text = "Scan New Contract")
+                            Text(
+                                text = "Scan New Contract",
+                                style = LGType.Title.copy(
+                                    fontSize = 15.sp,
+                                    fontWeight = FontWeight.SemiBold,
+                                    color = Color.White
+                                )
+                            )
                         }
                     }
                 }
@@ -165,15 +197,16 @@ fun VaultScreen(
                     .fillMaxSize()
                     .padding(horizontal = 20.dp),
                 contentPadding = PaddingValues(top = 16.dp, bottom = 80.dp),
-                verticalArrangement = Arrangement.spacedBy(12.dp)
+                verticalArrangement = Arrangement.spacedBy(14.dp)
             ) {
                 item {
                     Text(
                         text = "PAST AUDITS (${savedDocs.size})",
-                        style = MaterialTheme.typography.labelSmall,
-                        color = MaterialTheme.colorScheme.onSurfaceVariant,
-                        fontWeight = FontWeight.SemiBold,
-                        letterSpacing = 1.2.sp,
+                        style = LGType.Label.copy(
+                            color = colors.TextSecondary,
+                            fontWeight = FontWeight.SemiBold,
+                            letterSpacing = 1.2.sp
+                        ),
                         modifier = Modifier.padding(start = 4.dp, bottom = 4.dp)
                     )
                 }
@@ -201,6 +234,7 @@ fun VaultDocumentCard(
     onClick: () -> Unit,
     onDelete: () -> Unit
 ) {
+    val colors = LocalLGColors.current
     val dateFormat = remember { SimpleDateFormat("MMM dd, yyyy · HH:mm", Locale.getDefault()) }
     val formattedDate = remember(document.dateScanned) {
         dateFormat.format(Date(document.dateScanned))
@@ -210,29 +244,29 @@ fun VaultDocumentCard(
         modifier = Modifier
             .fillMaxWidth()
             .lgPressClickable(onClick = onClick),
-        shape = RoundedCornerShape(16.dp),
+        shape = RoundedCornerShape(24.dp),
         colors = CardDefaults.elevatedCardColors(
-            containerColor = MaterialTheme.colorScheme.surface
+            containerColor = colors.Surface
         ),
         elevation = CardDefaults.elevatedCardElevation(defaultElevation = 2.dp)
     ) {
         Row(
             modifier = Modifier
                 .fillMaxWidth()
-                .padding(16.dp),
+                .padding(20.dp),
             verticalAlignment = Alignment.CenterVertically
         ) {
             Box(
                 modifier = Modifier
-                    .size(44.dp)
-                    .clip(RoundedCornerShape(12.dp))
-                    .background(MaterialTheme.colorScheme.primary.copy(alpha = 0.12f)),
+                    .size(48.dp)
+                    .clip(RoundedCornerShape(16.dp))
+                    .background(colors.Border.copy(alpha = 0.5f)),
                 contentAlignment = Alignment.Center
             ) {
                 Icon(
                     imageVector = Icons.Filled.Description,
                     contentDescription = null,
-                    tint = MaterialTheme.colorScheme.primary,
+                    tint = colors.TextPrimary,
                     modifier = Modifier.size(24.dp)
                 )
             }
@@ -242,8 +276,8 @@ fun VaultDocumentCard(
             Column(modifier = Modifier.weight(1f)) {
                 Text(
                     text = document.title,
-                    style = MaterialTheme.typography.bodyLarge.copy(fontWeight = FontWeight.SemiBold),
-                    color = MaterialTheme.colorScheme.onSurface,
+                    style = LGType.Body.copy(fontWeight = FontWeight.SemiBold),
+                    color = colors.TextPrimary,
                     maxLines = 1,
                     overflow = TextOverflow.Ellipsis
                 )
@@ -251,20 +285,20 @@ fun VaultDocumentCard(
                 Row(verticalAlignment = Alignment.CenterVertically) {
                     Text(
                         text = formattedDate,
-                        style = MaterialTheme.typography.bodySmall,
-                        color = MaterialTheme.colorScheme.onSurfaceVariant
+                        style = LGType.Caption,
+                        color = colors.TextSecondary
                     )
                     Spacer(modifier = Modifier.width(8.dp))
                     Text(
                         text = "•",
-                        style = MaterialTheme.typography.bodySmall,
-                        color = MaterialTheme.colorScheme.onSurfaceVariant
+                        style = LGType.Caption,
+                        color = colors.TextSecondary
                     )
                     Spacer(modifier = Modifier.width(8.dp))
                     Text(
                         text = "${document.pageCount} ${if (document.pageCount == 1) "page" else "pages"}",
-                        style = MaterialTheme.typography.bodySmall,
-                        color = MaterialTheme.colorScheme.onSurfaceVariant
+                        style = LGType.Caption,
+                        color = colors.TextSecondary
                     )
                 }
             }
@@ -273,8 +307,7 @@ fun VaultDocumentCard(
                 Icon(
                     imageVector = Icons.Filled.DeleteOutline,
                     contentDescription = "Delete Document",
-                    tint = MaterialTheme.colorScheme.onSurfaceVariant.copy(alpha = 0.7f),
-                    modifier = Modifier.size(22.dp)
+                    tint = colors.TextSecondary
                 )
             }
         }

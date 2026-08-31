@@ -14,7 +14,9 @@ import androidx.compose.foundation.layout.*
 import androidx.compose.foundation.shape.CircleShape
 import androidx.compose.foundation.shape.RoundedCornerShape
 import androidx.compose.material.icons.Icons
+import androidx.compose.material.icons.automirrored.filled.ArrowBack
 import androidx.compose.material.icons.filled.*
+import androidx.compose.material.icons.rounded.Info
 import androidx.compose.material3.*
 import androidx.compose.runtime.*
 import androidx.compose.ui.Alignment
@@ -32,10 +34,13 @@ import androidx.compose.ui.text.font.FontFamily
 import androidx.compose.ui.text.font.FontWeight
 import androidx.compose.ui.text.style.TextAlign
 import androidx.compose.ui.unit.dp
+import androidx.compose.ui.unit.sp
 import androidx.lifecycle.viewmodel.compose.viewModel
 import com.example.ui.primitives.LGBadge
 import com.example.ui.primitives.LGColorsDark
+import com.example.ui.primitives.LGColorsLight
 import com.example.ui.primitives.LGRiskGauge
+import com.example.ui.primitives.LGType
 import com.example.ui.primitives.LocalLGColors
 import com.example.ui.primitives.severityColor
 import com.example.ui.primitives.severityLabel
@@ -50,10 +55,8 @@ import com.google.mlkit.vision.documentscanner.GmsDocumentScanningResult
 
 
 // ═══════════════════════════════════════════════════════════════════════════════
-// REUSABLE: Primary CTA Button with press-scale animation
+// REUSABLE: Primary CTA Button with press-scale animation (Soft UI 24dp)
 // ═══════════════════════════════════════════════════════════════════════════════
-// Navy Blue background, bold white text, 12dp radius, 48dp minimum height,
-// native ripple effect, and a subtle bounce-scale on press.
 
 @Composable
 fun AnimatedPrimaryButton(
@@ -62,6 +65,8 @@ fun AnimatedPrimaryButton(
     onClick: () -> Unit,
     modifier: Modifier = Modifier
 ) {
+    val colors = LocalLGColors.current
+    val isDark = colors == LGColorsDark
     val interactionSource = remember { MutableInteractionSource() }
     val isPressed by interactionSource.collectIsPressedAsState()
     val scale by animateFloatAsState(
@@ -77,84 +82,73 @@ fun AnimatedPrimaryButton(
         onClick = onClick,
         modifier = modifier
             .fillMaxWidth()
-            .defaultMinSize(minHeight = 48.dp)  // Accessibility: minimum touch target
+            .defaultMinSize(minHeight = 56.dp)   // 56dp touch target
             .height(56.dp)
             .scale(scale),
-        shape = RoundedCornerShape(12.dp),       // 12dp radius per design spec
-        colors = ButtonDefaults.buttonColors(
-            containerColor = MaterialTheme.colorScheme.primary  // Deep Navy Blue
+        shape = RoundedCornerShape(24.dp),       // 24dp Soft UI radius
+        colors = ButtonDefaults.elevatedButtonColors(
+            containerColor = if (isDark) Color(0xFF2E7D32) else Color(0xFF0A192F),
+            contentColor = Color.White
         ),
         interactionSource = interactionSource,
         elevation = ButtonDefaults.buttonElevation(
-            defaultElevation = 2.dp,
-            pressedElevation = 0.dp
+            defaultElevation = 3.dp,
+            pressedElevation = 1.dp,
+            hoveredElevation = 5.dp
         )
     ) {
         if (icon != null) {
             Icon(
                 imageVector = icon,
                 contentDescription = null,
-                tint = MaterialTheme.colorScheme.onPrimary,
+                tint = Color.White,
                 modifier = Modifier.size(20.dp)
             )
-            Spacer(modifier = Modifier.width(8.dp))
+            Spacer(modifier = Modifier.width(com.example.ui.primitives.LGSpacing.sm))
         }
         Text(
             text = text,
-            style = MaterialTheme.typography.titleMedium.copy(
-                fontWeight = FontWeight.Bold
-            ),
-            color = MaterialTheme.colorScheme.onPrimary
+            style = LGType.Title.copy(
+                fontWeight = FontWeight.Bold,
+                fontSize = 16.sp,
+                color = Color.White
+            )
         )
     }
 }
 
 
 // ═══════════════════════════════════════════════════════════════════════════════
-// REUSABLE: Privacy Banner
+// REUSABLE: Privacy Banner — High Contrast 100% Offline Badge
 // ═══════════════════════════════════════════════════════════════════════════════
-// TASK 3 FIX: Dark mode uses translucent emerald (#2A9D8F @ 15% alpha) with
-// bright green text/icons for a modern glowing aesthetic instead of the muddy
-// secondaryContainer default.
 
 @Composable
 fun PrivacyBanner() {
-    val isDark = LocalLGColors.current == LGColorsDark
-
-    // Dark mode: translucent emerald glow. Light mode: soft green container.
-    val bannerBackground = if (isDark) {
-        Color(0xFF2A9D8F).copy(alpha = 0.15f)
-    } else {
-        MaterialTheme.colorScheme.secondaryContainer
-    }
-    val bannerContentColor = if (isDark) {
-        Color(0xFF5EDECF)  // Bright, readable green for dark backgrounds
-    } else {
-        MaterialTheme.colorScheme.onSecondaryContainer
-    }
+    val colors = LocalLGColors.current
 
     Surface(
-        color = bannerBackground,
-        shape = RoundedCornerShape(12.dp),
+        color = colors.BannerSafeBackground,
+        shape = RoundedCornerShape(20.dp),
         modifier = Modifier.fillMaxWidth()
     ) {
         Row(
-            modifier = Modifier.padding(16.dp),
+            modifier = Modifier.padding(horizontal = com.example.ui.primitives.LGSpacing.lg, vertical = 14.dp),
             verticalAlignment = Alignment.CenterVertically,
             horizontalArrangement = Arrangement.Center
         ) {
             Icon(
                 imageVector = Icons.Filled.Lock,
                 contentDescription = "Secure",
-                tint = bannerContentColor,
-                modifier = Modifier.size(24.dp)
+                tint = colors.BannerSafeContent,
+                modifier = Modifier.size(18.dp)
             )
-            Spacer(modifier = Modifier.width(12.dp))
+            Spacer(modifier = Modifier.width(com.example.ui.primitives.LGSpacing.sm))
             Text(
                 text = "100% Offline & Secure. Your data never leaves your device.",
-                style = MaterialTheme.typography.bodyMedium,
-                fontWeight = FontWeight.Medium,
-                color = bannerContentColor
+                style = LGType.BodySmall.copy(
+                    fontWeight = FontWeight.Medium,
+                    color = colors.BannerSafeContent
+                )
             )
         }
     }
@@ -169,11 +163,13 @@ fun PrivacyBanner() {
 fun StudioFooter() {
     Text(
         text = "Powered by Anixium Studios",
-        style = MaterialTheme.typography.labelMedium,
-        color = MaterialTheme.colorScheme.onSurfaceVariant,
+        style = LGType.Caption.copy(
+            color = LocalLGColors.current.TextSecondary,
+            fontWeight = FontWeight.Medium
+        ),
         modifier = Modifier
             .fillMaxWidth()
-            .padding(vertical = 24.dp),
+            .padding(vertical = com.example.ui.primitives.LGSpacing.lg),
         textAlign = TextAlign.Center
     )
 }
@@ -184,17 +180,21 @@ fun StudioFooter() {
 // ═══════════════════════════════════════════════════════════════════════════════
 
 @Composable
-fun HomeScreen(viewModel: MainViewModel = viewModel()) {
-    val state by viewModel.uiState.collectAsState()
-    val isDarkMode by viewModel.isDarkMode.collectAsState()
+fun HomeScreen(
+    viewModel: MainViewModel,
+    modifier: Modifier = Modifier
+) {
+    val state by viewModel.auditState.collectAsState()
     val isProUser by viewModel.isProUser.collectAsState()
     val freeScansRemaining by viewModel.freeScansRemaining.collectAsState()
+    val isDarkMode by viewModel.isDarkMode.collectAsState()
     val context = LocalContext.current
     val activity = context.findActivity()
 
     // Paywall state
     var showPaywall by remember { mutableStateOf(false) }
 
+    // Scanner launcher callback (Google Play services Document Scanner API)
     val scannerLauncher = rememberLauncherForActivityResult(
         contract = ActivityResultContracts.StartIntentSenderForResult()
     ) { result ->
@@ -220,47 +220,78 @@ fun HomeScreen(viewModel: MainViewModel = viewModel()) {
             .background(MaterialTheme.colorScheme.background)
     ) {
         // ═══════════════════════════════════════════════════════════════════
-        // Top App Bar — Navy Blue with shield icon
+        // Top App Bar — Dynamic Navigation with Back Button on Results Screen
         // ═══════════════════════════════════════════════════════════════════
+        val colors = LocalLGColors.current
+        val isResultState = state is AuditState.Result
+
         Surface(
-            color = MaterialTheme.colorScheme.primary,
+            color = colors.HeaderBackground,
             modifier = Modifier.fillMaxWidth(),
-            shadowElevation = 6.dp
+            shadowElevation = 4.dp
         ) {
             Row(
                 modifier = Modifier
                     .statusBarsPadding()
-                    .padding(horizontal = 24.dp, vertical = 16.dp),
+                    .padding(horizontal = com.example.ui.primitives.LGSpacing.lg, vertical = com.example.ui.primitives.LGSpacing.md),
                 verticalAlignment = Alignment.CenterVertically
             ) {
-                Icon(
-                    imageVector = Icons.Filled.Shield,
-                    contentDescription = "App Logo",
-                    tint = MaterialTheme.colorScheme.onPrimary,
-                    modifier = Modifier.size(28.dp)
-                )
-                Spacer(modifier = Modifier.width(12.dp))
-                Text(
-                    text = "My Legal Guardian",
-                    style = MaterialTheme.typography.titleLarge.copy(
-                        fontFamily = FontFamily.SansSerif  // Explicit SansSerif guarantee
-                    ),
-                    color = MaterialTheme.colorScheme.onPrimary
-                )
+                if (isResultState) {
+                    Box(
+                        modifier = Modifier
+                            .size(36.dp)
+                            .clip(CircleShape)
+                            .background(colors.HeaderContent.copy(alpha = 0.12f))
+                            .clickable { viewModel.reset() },
+                        contentAlignment = Alignment.Center
+                    ) {
+                        Icon(
+                            imageVector = Icons.AutoMirrored.Filled.ArrowBack,
+                            contentDescription = "Back to Scan",
+                            tint = colors.HeaderContent,
+                            modifier = Modifier.size(20.dp)
+                        )
+                    }
+                    Spacer(modifier = Modifier.width(com.example.ui.primitives.LGSpacing.md))
+                    Text(
+                        text = "Audit Results",
+                        style = LGType.Title.copy(
+                            color = colors.HeaderContent,
+                            fontWeight = FontWeight.Bold
+                        )
+                    )
+                } else {
+                    Icon(
+                        imageVector = Icons.Filled.Shield,
+                        contentDescription = "App Logo",
+                        tint = colors.HeaderContent,
+                        modifier = Modifier.size(26.dp)
+                    )
+                    Spacer(modifier = Modifier.width(com.example.ui.primitives.LGSpacing.sm))
+                    Text(
+                        text = "My Legal Guardian",
+                        style = LGType.Title.copy(
+                            color = colors.HeaderContent,
+                            fontWeight = FontWeight.Bold
+                        )
+                    )
+                }
+
                 Spacer(modifier = Modifier.weight(1f))
+
                 // ── Theme Toggle ─────────────────────────────────────────
                 Box(
                     modifier = Modifier
                         .size(36.dp)
                         .clip(CircleShape)
-                        .background(MaterialTheme.colorScheme.onPrimary.copy(alpha = 0.12f))
+                        .background(colors.HeaderContent.copy(alpha = 0.12f))
                         .clickable { viewModel.toggleTheme() },
                     contentAlignment = Alignment.Center
                 ) {
                     Icon(
                         imageVector = if (isDarkMode) Icons.Filled.LightMode else Icons.Filled.DarkMode,
                         contentDescription = if (isDarkMode) "Switch to Light Mode" else "Switch to Dark Mode",
-                        tint = MaterialTheme.colorScheme.onPrimary,
+                        tint = colors.HeaderContent,
                         modifier = Modifier.size(20.dp)
                     )
                 }
@@ -270,7 +301,7 @@ fun HomeScreen(viewModel: MainViewModel = viewModel()) {
         // ═══════════════════════════════════════════════════════════════════
         // Body — Animated screen transitions
         // ═══════════════════════════════════════════════════════════════════
-        Box(modifier = Modifier.fillMaxSize().padding(horizontal = 24.dp)) {
+        Box(modifier = Modifier.fillMaxSize().padding(horizontal = com.example.ui.primitives.LGSpacing.lg)) {
             AnimatedContent(
                 targetState = state,
                 transitionSpec = { fadeIn(tween(300)) togetherWith fadeOut(tween(300)) },
@@ -285,7 +316,7 @@ fun HomeScreen(viewModel: MainViewModel = viewModel()) {
                                 viewModel.attemptScan(
                                     onSuccess = {
                                         viewModel.getScannerClient().getStartScanIntent(act)
-                                            .addOnSuccessListener { intentSender ->
+                                             .addOnSuccessListener { intentSender ->
                                                 scannerLauncher.launch(
                                                     IntentSenderRequest.Builder(intentSender).build()
                                                 )
@@ -326,6 +357,9 @@ private fun IdleScreen(
     onScanClick: () -> Unit,
     onPurchaseClick: () -> Unit
 ) {
+    val colors = LocalLGColors.current
+    val isDark = colors == LGColorsDark
+
     Column(
         modifier = Modifier.fillMaxSize(),
         verticalArrangement = Arrangement.Center,
@@ -334,31 +368,41 @@ private fun IdleScreen(
         // ── Main Action Card ─────────────────────────────────────────────
         ElevatedCard(
             modifier = Modifier.fillMaxWidth().animateContentSize(),
-            shape = RoundedCornerShape(16.dp),      // Rounded corners per spec
+            shape = RoundedCornerShape(24.dp),
             colors = CardDefaults.elevatedCardColors(
-                containerColor = MaterialTheme.colorScheme.surface
+                containerColor = colors.Surface
             ),
             elevation = CardDefaults.elevatedCardElevation(
-                defaultElevation = 4.dp              // Soft modern depth
+                defaultElevation = 3.dp
             )
         ) {
             Column(
                 horizontalAlignment = Alignment.CenterHorizontally,
-                modifier = Modifier.padding(36.dp)
+                modifier = Modifier.padding(32.dp)
             ) {
-                // ── Scan Icon ────────────────────────────────────────────
+                // ── Hero Scan Icon with subtle Navy-to-Indigo gradient fill ─────
                 Box(
                     modifier = Modifier
-                        .size(72.dp)
-                        .clip(RoundedCornerShape(16.dp))
-                        .background(MaterialTheme.colorScheme.primaryContainer),
+                        .size(80.dp)
+                        .clip(RoundedCornerShape(24.dp))
+                        .background(
+                            if (isDark) {
+                                androidx.compose.ui.graphics.Brush.linearGradient(
+                                    listOf(Color(0xFF1E2638), Color(0xFF161E2E))
+                                )
+                            } else {
+                                androidx.compose.ui.graphics.Brush.linearGradient(
+                                    listOf(Color(0xFF0A192F), Color(0xFF1E3A5F))
+                                )
+                            }
+                        ),
                     contentAlignment = Alignment.Center
                 ) {
                     Icon(
                         imageVector = Icons.Filled.DocumentScanner,
                         contentDescription = "Scan",
-                        tint = MaterialTheme.colorScheme.onPrimaryContainer,
-                        modifier = Modifier.size(36.dp)
+                        tint = Color.White,
+                        modifier = Modifier.size(40.dp)
                     )
                 }
 
@@ -366,29 +410,65 @@ private fun IdleScreen(
 
                 Text(
                     text = "Ready to Scan",
-                    style = MaterialTheme.typography.headlineLarge,
-                    color = MaterialTheme.colorScheme.onSurface
+                    style = LGType.Display.copy(
+                        fontWeight = FontWeight.Bold,
+                        fontSize = 26.sp
+                    ),
+                    color = colors.TextPrimary
                 )
 
                 Spacer(modifier = Modifier.height(8.dp))
 
                 Text(
                     text = "Analyze contracts instantly for hidden traps,\npredatory clauses, and missing safeguards.",
-                    style = MaterialTheme.typography.bodyMedium,
-                    color = MaterialTheme.colorScheme.onSurfaceVariant,
+                    style = LGType.Body.copy(
+                        color = colors.TextSecondary
+                    ),
                     textAlign = TextAlign.Center
                 )
 
-                Spacer(modifier = Modifier.height(28.dp))
+                Spacer(modifier = Modifier.height(24.dp))
 
-                // ── Free scans counter ───────────────────────────────────
+                // ── Free scans 3-dot/segment indicator ────────────────────
                 if (!isProUser) {
-                    Text(
-                        text = "Free scans remaining today: $freeScansRemaining/3",
-                        style = MaterialTheme.typography.bodyMedium,
-                        color = MaterialTheme.colorScheme.onSurfaceVariant
-                    )
-                    Spacer(modifier = Modifier.height(8.dp))
+                    Row(
+                        verticalAlignment = Alignment.CenterVertically,
+                        horizontalArrangement = Arrangement.Center,
+                        modifier = Modifier.padding(bottom = com.example.ui.primitives.LGSpacing.md)
+                    ) {
+                        Text(
+                            text = "Daily free scans:",
+                            style = LGType.BodySmall.copy(
+                                color = colors.TextSecondary,
+                                fontWeight = FontWeight.Medium
+                            )
+                        )
+                        Spacer(modifier = Modifier.width(com.example.ui.primitives.LGSpacing.sm))
+                        Row(
+                            horizontalArrangement = Arrangement.spacedBy(6.dp),
+                            verticalAlignment = Alignment.CenterVertically
+                        ) {
+                            for (i in 1..3) {
+                                val isRemaining = i <= freeScansRemaining
+                                Box(
+                                    modifier = Modifier
+                                        .size(width = 18.dp, height = 6.dp)
+                                        .clip(RoundedCornerShape(3.dp))
+                                        .background(
+                                            if (isRemaining) colors.AccentSafe else colors.Border.copy(alpha = 0.6f)
+                                        )
+                                )
+                            }
+                        }
+                        Spacer(modifier = Modifier.width(6.dp))
+                        Text(
+                            text = "$freeScansRemaining/3",
+                            style = LGType.Label.copy(
+                                color = if (freeScansRemaining > 0) colors.TextPrimary else colors.AccentDanger,
+                                fontWeight = FontWeight.Bold
+                            )
+                        )
+                    }
                 }
 
                 // ── Primary CTA ──────────────────────────────────────────
@@ -421,20 +501,24 @@ private fun IdleScreen(
 
 @Composable
 private fun StatusScreen(message: String) {
+    val colors = LocalLGColors.current
+
     Column(
         modifier = Modifier.fillMaxSize(),
         horizontalAlignment = Alignment.CenterHorizontally,
         verticalArrangement = Arrangement.Center
     ) {
         CircularProgressIndicator(
-            color = MaterialTheme.colorScheme.primary,
+            color = colors.AccentSafe,
             strokeWidth = 3.dp
         )
         Spacer(modifier = Modifier.height(24.dp))
         Text(
             text = message,
-            style = MaterialTheme.typography.titleMedium,
-            color = MaterialTheme.colorScheme.onBackground
+            style = LGType.Title.copy(
+                fontWeight = FontWeight.SemiBold,
+                color = colors.TextPrimary
+            )
         )
     }
 }
@@ -519,7 +603,7 @@ private fun ResultScreen(
             .verticalScroll(rememberScrollState())
             .navigationBarsPadding()
             .animateContentSize(),
-        verticalArrangement = Arrangement.spacedBy(16.dp)  // Mathematically perfect spacing
+        verticalArrangement = Arrangement.spacedBy(12.dp)  // Consistent 12dp spacing
     ) {
         Spacer(modifier = Modifier.height(8.dp))
 
@@ -530,20 +614,22 @@ private fun ResultScreen(
         val isHighRisk = score > 60
         val isModerateRisk = score in 31..60
 
+        val colors = LocalLGColors.current
+
         val bannerColor = when {
-            isHighRisk     -> MaterialTheme.colorScheme.error      // Vivid Crimson
-            isModerateRisk -> Color(0xFFE9A319)                    // Rich Amber
-            else           -> Color(0xFF2A9D8F)                    // Emerald Green
+            isHighRisk     -> colors.AccentDanger   // Red #D32F2F
+            isModerateRisk -> colors.AccentWarning  // Amber #F9A825
+            else           -> colors.AccentSafe     // Green #2E7D32
         }
         val bannerContainer = when {
-            isHighRisk     -> MaterialTheme.colorScheme.errorContainer
-            isModerateRisk -> Color(0xFFFFF8E1)
-            else           -> Color(0xFFE0F5F1)
+            isHighRisk     -> colors.BannerDangerBackground
+            isModerateRisk -> colors.BannerWarningBackground
+            else           -> colors.BannerSafeBackground
         }
         val bannerOnContainer = when {
-            isHighRisk     -> MaterialTheme.colorScheme.onErrorContainer
-            isModerateRisk -> Color(0xFFC68300)
-            else           -> Color(0xFF1A7A6E)
+            isHighRisk     -> colors.BannerDangerContent
+            isModerateRisk -> colors.BannerWarningContent
+            else           -> colors.BannerSafeContent
         }
         val bannerIcon = when {
             isHighRisk     -> Icons.Filled.GppBad
@@ -553,18 +639,16 @@ private fun ResultScreen(
         val bannerText = when {
             isHighRisk     -> "HIGH RISK DETECTED"
             isModerateRisk -> "MODERATE RISK"
-            else           -> "LOW RISK"
+            else           -> "LOW RISK · SAFE"
         }
 
         Surface(
             color = bannerContainer,
-            modifier = Modifier
-                .fillMaxWidth()
-                .border(1.5.dp, bannerColor.copy(alpha = 0.4f), RoundedCornerShape(16.dp)),
-            shape = RoundedCornerShape(16.dp)
+            modifier = Modifier.fillMaxWidth(),
+            shape = RoundedCornerShape(24.dp)
         ) {
             Row(
-                modifier = Modifier.padding(20.dp),
+                modifier = Modifier.padding(horizontal = 24.dp, vertical = 20.dp),
                 verticalAlignment = Alignment.CenterVertically,
                 horizontalArrangement = Arrangement.Center
             ) {
@@ -574,11 +658,14 @@ private fun ResultScreen(
                     tint = bannerColor,
                     modifier = Modifier.size(28.dp)
                 )
-                Spacer(modifier = Modifier.width(12.dp))
+                Spacer(modifier = Modifier.width(14.dp))
                 Text(
                     text = bannerText,
-                    style = MaterialTheme.typography.titleMedium,
-                    fontWeight = FontWeight.Bold,
+                    style = LGType.Title.copy(
+                        fontWeight = FontWeight.Bold,
+                        fontSize = 17.sp,
+                        letterSpacing = 0.5.sp
+                    ),
                     color = bannerOnContainer
                 )
             }
@@ -590,23 +677,24 @@ private fun ResultScreen(
         if (audit.overallRiskScore > 0) {
             ElevatedCard(
                 modifier = Modifier.fillMaxWidth().animateContentSize(),
-                shape = RoundedCornerShape(16.dp),
+                shape = RoundedCornerShape(24.dp),
                 colors = CardDefaults.elevatedCardColors(
-                    containerColor = MaterialTheme.colorScheme.surface
+                    containerColor = colors.Surface
                 ),
-                elevation = CardDefaults.elevatedCardElevation(defaultElevation = 4.dp)
+                elevation = CardDefaults.elevatedCardElevation(defaultElevation = 2.dp)
             ) {
                 Column(
                     horizontalAlignment = Alignment.CenterHorizontally,
                     modifier = Modifier.padding(24.dp)
                 ) {
                     LGRiskGauge(score = audit.overallRiskScore)
-                    Spacer(modifier = Modifier.height(12.dp))
+                    Spacer(modifier = Modifier.height(14.dp))
                     Text(
                         text = "Overall Risk Assessment",
-                        style = MaterialTheme.typography.bodyMedium,
-                        fontWeight = FontWeight.Medium,
-                        color = MaterialTheme.colorScheme.onSurfaceVariant
+                        style = LGType.Body.copy(
+                            fontWeight = FontWeight.Medium
+                        ),
+                        color = colors.TextSecondary
                     )
                 }
             }
@@ -616,9 +704,9 @@ private fun ResultScreen(
         // Predatory Clauses — Expandable Accordion Cards with Checkboxes
         // ═════════════════════════════════════════════════════════════════
         val predatoryHeaderColor = if (audit.matchedRedFlags.isNotEmpty()) {
-            MaterialTheme.colorScheme.error
+            colors.AccentDanger
         } else {
-            MaterialTheme.colorScheme.secondary
+            colors.AccentSafe
         }
 
         SectionHeader(
@@ -645,44 +733,45 @@ private fun ResultScreen(
         } else {
             ElevatedCard(
                 modifier = Modifier.fillMaxWidth(),
-                shape = RoundedCornerShape(16.dp),
+                shape = RoundedCornerShape(24.dp),
                 colors = CardDefaults.elevatedCardColors(
-                    containerColor = MaterialTheme.colorScheme.secondaryContainer
+                    containerColor = colors.BannerSafeBackground
                 ),
                 elevation = CardDefaults.elevatedCardElevation(defaultElevation = 2.dp)
             ) {
                 Row(
-                    modifier = Modifier.padding(16.dp),
+                    modifier = Modifier.padding(20.dp),
                     verticalAlignment = Alignment.CenterVertically
                 ) {
                     Icon(
                         imageVector = Icons.Filled.CheckCircle,
                         contentDescription = "Safe",
-                        tint = MaterialTheme.colorScheme.secondary,
-                        modifier = Modifier.size(22.dp)
+                        tint = colors.AccentSafe,
+                        modifier = Modifier.size(24.dp)
                     )
                     Spacer(modifier = Modifier.width(12.dp))
                     Text(
                         text = "No predatory clauses detected.",
-                        style = MaterialTheme.typography.bodyMedium,
-                        fontWeight = FontWeight.Medium,
-                        color = MaterialTheme.colorScheme.onSecondaryContainer
+                        style = LGType.Body.copy(
+                            fontWeight = FontWeight.Medium
+                        ),
+                        color = colors.BannerSafeContent
                     )
                 }
             }
         }
 
         // ═════════════════════════════════════════════════════════════════
-        // Missing Safeguards
+        // Missing Safeguards — Interactive Expandable Items
         // ═════════════════════════════════════════════════════════════════
         val safeguardsPresent = audit.missingMandatoryClauses.isEmpty()
 
         SectionHeader(
             title = "Missing Mandatory Safeguards",
             color = if (safeguardsPresent) {
-                MaterialTheme.colorScheme.secondary
+                colors.AccentSafe
             } else {
-                MaterialTheme.colorScheme.onBackground
+                colors.TextPrimary
             }
         )
 
@@ -690,49 +779,36 @@ private fun ResultScreen(
             modifier = Modifier.fillMaxWidth().animateContentSize(),
             colors = CardDefaults.elevatedCardColors(
                 containerColor = if (safeguardsPresent) {
-                    MaterialTheme.colorScheme.secondaryContainer
+                    colors.BannerSafeBackground
                 } else {
-                    MaterialTheme.colorScheme.surfaceVariant
+                    colors.Surface
                 }
             ),
-            shape = RoundedCornerShape(16.dp),
-            elevation = CardDefaults.elevatedCardElevation(defaultElevation = 4.dp)
+            shape = RoundedCornerShape(24.dp),
+            elevation = CardDefaults.elevatedCardElevation(defaultElevation = 2.dp)
         ) {
-            Column(modifier = Modifier.padding(16.dp)) {
+            Column(modifier = Modifier.padding(20.dp)) {
                 if (safeguardsPresent) {
                     Row(verticalAlignment = Alignment.CenterVertically) {
                         Icon(
                             imageVector = Icons.Filled.CheckCircle,
                             contentDescription = "All present",
-                            tint = MaterialTheme.colorScheme.secondary,
-                            modifier = Modifier.size(22.dp)
+                            tint = colors.AccentSafe,
+                            modifier = Modifier.size(24.dp)
                         )
                         Spacer(modifier = Modifier.width(12.dp))
                         Text(
                             text = "All standard safeguards present",
-                            style = MaterialTheme.typography.bodyMedium,
-                            fontWeight = FontWeight.Medium,
-                            color = MaterialTheme.colorScheme.onSecondaryContainer
+                            style = LGType.Body.copy(
+                                fontWeight = FontWeight.Medium
+                            ),
+                            color = colors.BannerSafeContent
                         )
                     }
                 } else {
-                    Column(verticalArrangement = Arrangement.spacedBy(10.dp)) {
+                    Column(verticalArrangement = Arrangement.spacedBy(12.dp)) {
                         audit.missingMandatoryClauses.forEach { clause ->
-                            Row(verticalAlignment = Alignment.CenterVertically) {
-                                Icon(
-                                    imageVector = Icons.Filled.Warning,
-                                    contentDescription = "Missing",
-                                    tint = Color(0xFFE9A319),  // Rich Amber
-                                    modifier = Modifier.size(20.dp)
-                                )
-                                Spacer(modifier = Modifier.width(10.dp))
-                                Text(
-                                    text = clause,
-                                    style = MaterialTheme.typography.bodyMedium,
-                                    fontWeight = FontWeight.Medium,
-                                    color = MaterialTheme.colorScheme.onSurfaceVariant
-                                )
-                            }
+                            SafeguardExpandableItem(clause = clause)
                         }
                     }
                 }
@@ -746,24 +822,24 @@ private fun ResultScreen(
             val cost = audit.realCostBreakdown
             SectionHeader(
                 title = "Cost Impact Breakdown",
-                color = MaterialTheme.colorScheme.onBackground
+                color = colors.TextPrimary
             )
             ElevatedCard(
                 modifier = Modifier.fillMaxWidth().animateContentSize(),
-                shape = RoundedCornerShape(16.dp),
+                shape = RoundedCornerShape(24.dp),
                 colors = CardDefaults.elevatedCardColors(
-                    containerColor = MaterialTheme.colorScheme.surface
+                    containerColor = colors.Surface
                 ),
-                elevation = CardDefaults.elevatedCardElevation(defaultElevation = 4.dp)
+                elevation = CardDefaults.elevatedCardElevation(defaultElevation = 2.dp)
             ) {
-                Column(modifier = Modifier.padding(20.dp)) {
+                Column(modifier = Modifier.padding(24.dp)) {
                     CostRow(label = "Base Amount", value = "${cost.currencySymbol}${formatAmount(cost.baseAmount)}")
                     CostRow(label = "Maintenance", value = "${cost.currencySymbol}${formatAmount(cost.maintenanceAmount)}")
                     CostRow(label = "Tax", value = "${cost.currencySymbol}${formatAmount(cost.taxAmount)}")
                     HorizontalDivider(
-                        color = MaterialTheme.colorScheme.onSurfaceVariant.copy(alpha = 0.15f),
-                        thickness = 1.dp,
-                        modifier = Modifier.padding(vertical = 10.dp)
+                        color = colors.Border.copy(alpha = 0.5f),
+                        thickness = 0.5.dp,
+                        modifier = Modifier.padding(vertical = 12.dp)
                     )
                     Row(
                         modifier = Modifier.fillMaxWidth(),
@@ -771,13 +847,13 @@ private fun ResultScreen(
                     ) {
                         Text(
                             text = "Total",
-                            style = MaterialTheme.typography.titleMedium,
-                            color = MaterialTheme.colorScheme.onSurface
+                            style = LGType.Title.copy(fontWeight = FontWeight.Bold),
+                            color = colors.TextPrimary
                         )
                         Text(
                             text = "${cost.currencySymbol}${formatAmount(cost.totalAmount)}",
-                            style = MaterialTheme.typography.titleMedium,
-                            color = MaterialTheme.colorScheme.error
+                            style = LGType.Title.copy(fontWeight = FontWeight.Bold),
+                            color = colors.AccentDanger
                         )
                     }
                 }
@@ -787,44 +863,38 @@ private fun ResultScreen(
         // ═════════════════════════════════════════════════════════════════
         // "Fight These Clauses" — Consolidated Negotiation Email CTA
         // ═════════════════════════════════════════════════════════════════
-        // Sleek minimalist list replaces the old stacked purple buttons.
-        // Each clause row: title on left, copy icon on right.
-        // Haptic feedback on copy action.
 
         if (audit.matchedRedFlags.isNotEmpty()) {
             val hasSelection = checkedClauses.isNotEmpty()
 
             SectionHeader(
                 title = "Fight These Clauses",
-                color = MaterialTheme.colorScheme.primary
+                color = colors.TextPrimary
             )
 
             Text(
                 text = "Select the clauses above, then draft a combined negotiation email.",
-                style = MaterialTheme.typography.bodySmall,
-                color = MaterialTheme.colorScheme.onSurfaceVariant
+                style = LGType.BodySmall,
+                color = colors.TextSecondary
             )
 
             // ── Individual clause copy rows ──────────────────────────────
-            // Sleek list: title left, copy icon right. Replaces the old
-            // massive stacked buttons.
             ElevatedCard(
                 modifier = Modifier.fillMaxWidth(),
-                shape = RoundedCornerShape(16.dp),
+                shape = RoundedCornerShape(24.dp),
                 colors = CardDefaults.elevatedCardColors(
-                    containerColor = MaterialTheme.colorScheme.surface
+                    containerColor = colors.Surface
                 ),
                 elevation = CardDefaults.elevatedCardElevation(defaultElevation = 2.dp)
             ) {
-                Column(modifier = Modifier.padding(vertical = 4.dp)) {
+                Column(modifier = Modifier.padding(vertical = 6.dp)) {
                     audit.matchedRedFlags.forEachIndexed { index, flag ->
                         // ── Minimalist clause row ────────────────────────
                         Row(
                             modifier = Modifier
                                 .fillMaxWidth()
-                                .defaultMinSize(minHeight = 48.dp)
+                                .defaultMinSize(minHeight = 52.dp)
                                 .clickable {
-                                    // Copy individual clause negotiation draft
                                     val draft = audit.negotiationDrafts[flag.displayName]
                                         ?: com.example.engine.NegotiationTemplateEngine.generateDraft(
                                             category = flag.displayName,
@@ -835,22 +905,23 @@ private fun ResultScreen(
                                     haptic.performHapticFeedback(HapticFeedbackType.TextHandleMove)
                                     Toast.makeText(context, "${flag.displayName} draft copied!", Toast.LENGTH_SHORT).show()
                                 }
-                                .padding(horizontal = 16.dp, vertical = 12.dp),
+                                .padding(horizontal = 20.dp, vertical = 14.dp),
                             verticalAlignment = Alignment.CenterVertically,
                             horizontalArrangement = Arrangement.SpaceBetween
                         ) {
                             Text(
                                 text = flag.displayName,
-                                style = MaterialTheme.typography.bodyMedium,
-                                fontWeight = FontWeight.Medium,
-                                color = MaterialTheme.colorScheme.onSurface,
+                                style = LGType.Body.copy(
+                                    fontWeight = FontWeight.Medium
+                                ),
+                                color = colors.TextPrimary,
                                 modifier = Modifier.weight(1f)
                             )
                             Spacer(modifier = Modifier.width(12.dp))
                             Icon(
-                                imageVector = Icons.Filled.ContentCopy,
-                                contentDescription = "Copy draft for ${flag.displayName}",
-                                tint = MaterialTheme.colorScheme.onSurfaceVariant,
+                                imageVector = Icons.Filled.Email,
+                                contentDescription = "Draft negotiation email for ${flag.displayName}",
+                                tint = colors.TextSecondary,
                                 modifier = Modifier.size(20.dp)
                             )
                         }
@@ -858,9 +929,9 @@ private fun ResultScreen(
                         // Divider between rows (not after the last one)
                         if (index < audit.matchedRedFlags.lastIndex) {
                             HorizontalDivider(
-                                color = MaterialTheme.colorScheme.outline.copy(alpha = 0.3f),
+                                color = colors.Border.copy(alpha = 0.5f),
                                 thickness = 0.5.dp,
-                                modifier = Modifier.padding(horizontal = 16.dp)
+                                modifier = Modifier.padding(horizontal = 20.dp)
                             )
                         }
                     }
@@ -896,23 +967,31 @@ private fun ResultScreen(
                     },
                     modifier = Modifier
                         .fillMaxWidth()
-                        .defaultMinSize(minHeight = 48.dp)
+                        .defaultMinSize(minHeight = 56.dp)
                         .height(56.dp),
-                    shape = RoundedCornerShape(12.dp),
-                    colors = ButtonDefaults.buttonColors(
-                        containerColor = MaterialTheme.colorScheme.primary
+                    shape = RoundedCornerShape(24.dp),
+                    colors = ButtonDefaults.elevatedButtonColors(
+                        containerColor = if (colors == LGColorsDark) Color(0xFF2E7D32) else Color(0xFF0A192F),
+                        contentColor = Color.White
+                    ),
+                    elevation = ButtonDefaults.buttonElevation(
+                        defaultElevation = 3.dp,
+                        pressedElevation = 1.dp
                     )
                 ) {
                     Icon(
                         imageVector = Icons.Filled.Email,
                         contentDescription = null,
+                        tint = Color.White,
                         modifier = Modifier.size(20.dp)
                     )
                     Spacer(modifier = Modifier.width(8.dp))
                     Text(
                         text = "Draft Combined Email (${checkedClauses.size})",
-                        style = MaterialTheme.typography.titleMedium.copy(
-                            fontWeight = FontWeight.Bold
+                        style = LGType.Title.copy(
+                            fontSize = 16.sp,
+                            fontWeight = FontWeight.Bold,
+                            color = Color.White
                         )
                     )
                 }
@@ -943,28 +1022,31 @@ private fun ResultScreen(
                 },
                 modifier = Modifier
                     .fillMaxWidth()
-                    .defaultMinSize(minHeight = 48.dp)
+                    .defaultMinSize(minHeight = 56.dp)
                     .height(56.dp),
-                shape = RoundedCornerShape(12.dp),
+                shape = RoundedCornerShape(24.dp),
                 border = BorderStroke(
                     width = 1.5.dp,
-                    color = if (isProUser) MaterialTheme.colorScheme.primary else Color(0xFFE9A319)
+                    color = if (isProUser) colors.Border else colors.AccentWarning
                 ),
                 colors = ButtonDefaults.outlinedButtonColors(
-                    contentColor = if (isProUser) MaterialTheme.colorScheme.primary else Color(0xFFE9A319)
+                    containerColor = colors.Surface,
+                    contentColor = colors.TextPrimary
                 )
             ) {
                 Icon(
                     imageVector = Icons.Filled.PictureAsPdf,
                     contentDescription = null,
+                    tint = if (isProUser) colors.TextPrimary else colors.AccentWarning,
                     modifier = Modifier.size(20.dp)
                 )
                 Spacer(modifier = Modifier.width(8.dp))
                 Text(
                     text = if (isProUser) "Export PDF Report" else "Export PDF Report (Pro)",
-                    style = MaterialTheme.typography.titleMedium.copy(
+                    style = LGType.Title.copy(
+                        fontSize = 15.sp,
                         fontWeight = FontWeight.Bold,
-                        fontFamily = FontFamily.SansSerif
+                        color = colors.TextPrimary
                     )
                 )
                 if (!isProUser) {
@@ -973,7 +1055,7 @@ private fun ResultScreen(
                         imageVector = Icons.Filled.Lock,
                         contentDescription = "Locked",
                         modifier = Modifier.size(16.dp),
-                        tint = Color(0xFFE9A319)
+                        tint = colors.AccentWarning
                     )
                 }
             }
@@ -991,31 +1073,32 @@ private fun ResultScreen(
                 onClick = onReset,
                 modifier = Modifier
                     .fillMaxWidth()
-                    .defaultMinSize(minHeight = 48.dp)
-                    .height(52.dp),
-                shape = RoundedCornerShape(12.dp),
+                    .defaultMinSize(minHeight = 56.dp)
+                    .height(56.dp),
+                shape = RoundedCornerShape(24.dp),
                 border = BorderStroke(
-                    width = 1.dp,
-                    color = MaterialTheme.colorScheme.outlineVariant.copy(alpha = 0.6f)
+                    width = 1.5.dp,
+                    color = colors.Border
                 ),
                 colors = ButtonDefaults.outlinedButtonColors(
-                    contentColor = MaterialTheme.colorScheme.onSurfaceVariant
+                    containerColor = colors.Surface,
+                    contentColor = colors.TextPrimary
                 )
             ) {
                 Icon(
                     imageVector = Icons.Filled.DocumentScanner,
                     contentDescription = null,
-                    tint = MaterialTheme.colorScheme.onSurfaceVariant,
-                    modifier = Modifier.size(18.dp)
+                    tint = colors.TextPrimary,
+                    modifier = Modifier.size(20.dp)
                 )
                 Spacer(modifier = Modifier.width(8.dp))
                 Text(
                     text = "Scan Another Contract",
-                    style = MaterialTheme.typography.bodyMedium.copy(
+                    style = LGType.Title.copy(
+                        fontSize = 15.sp,
                         fontWeight = FontWeight.SemiBold,
-                        fontFamily = FontFamily.SansSerif
-                    ),
-                    color = MaterialTheme.colorScheme.onSurfaceVariant
+                        color = colors.TextPrimary
+                    )
                 )
             }
         }
@@ -1043,9 +1126,119 @@ private fun SectionHeader(title: String, color: Color) {
 
 
 // ═══════════════════════════════════════════════════════════════════════════════
+// Legal Jargon Explanations — Plain-English safeguard descriptions
+// ═══════════════════════════════════════════════════════════════════════════════
+
+private val safeguardExplanations = mapOf(
+    "Notice to Cure / Default Period" to
+        "Gives you a grace period to fix any lease violations or overdue rent before the landlord can impose penalties or initiate eviction proceedings.",
+    "Right to Quiet Enjoyment" to
+        "The landlord cannot enter your property without proper notice or unreasonably disrupt your peaceful and private use of the space.",
+    "Mutual Termination Rights" to
+        "Allows both you and the landlord to end the agreement under fair conditions, rather than granting unilateral termination power to the landlord.",
+    "Security Deposit Return Timeline" to
+        "Requires the landlord to return your deposit within a specified statutory timeframe after move-out with an itemized statement of any deductions.",
+    "Landlord Maintenance Obligations" to
+        "Obligates the landlord to keep the property habitable — maintaining plumbing, electrical, heating, structural integrity, and essential services at their expense.",
+    "Habitability Warranty" to
+        "Guarantees that the premises comply with local health, safety, and building codes throughout the tenancy.",
+    "Limitation of Liability" to
+        "Protects the tenant from unreasonable one-sided indemnification clauses and unlimited financial liability for regular wear and tear."
+)
+
+
+// ═══════════════════════════════════════════════════════════════════════════════
+// REUSABLE: Safeguard Expandable Item — Interactive legal jargon explanation
+// ═══════════════════════════════════════════════════════════════════════════════
+// Amber warning icon + clause name + trailing info icon.
+// Tap to expand/collapse a plain-English explanation with distinct background.
+
+@Composable
+private fun SafeguardExpandableItem(clause: String) {
+    val colors = LocalLGColors.current
+    var expanded by remember { mutableStateOf(false) }
+
+    Column(
+        modifier = Modifier
+            .fillMaxWidth()
+            .clip(RoundedCornerShape(16.dp))
+            .animateContentSize(
+                animationSpec = spring(
+                    dampingRatio = Spring.DampingRatioNoBouncy,
+                    stiffness = Spring.StiffnessMedium
+                )
+            )
+    ) {
+        // ── Collapsed header: Amber warning icon + clause name + Info icon ──
+        Row(
+            modifier = Modifier
+                .fillMaxWidth()
+                .defaultMinSize(minHeight = 48.dp)
+                .clip(RoundedCornerShape(16.dp))
+                .clickable { expanded = !expanded }
+                .padding(vertical = 12.dp, horizontal = 8.dp),
+            verticalAlignment = Alignment.CenterVertically
+        ) {
+            Icon(
+                imageVector = Icons.Filled.Warning,
+                contentDescription = "Missing safeguard",
+                tint = colors.AccentWarning,  // Rich Amber #F9A825
+                modifier = Modifier.size(20.dp)
+            )
+            Spacer(modifier = Modifier.width(12.dp))
+            Text(
+                text = clause,
+                style = LGType.Subtitle.copy(
+                    fontWeight = FontWeight.SemiBold
+                ),
+                color = colors.TextPrimary,
+                modifier = Modifier.weight(1f)
+            )
+            Spacer(modifier = Modifier.width(8.dp))
+            Icon(
+                imageVector = Icons.Rounded.Info,
+                contentDescription = if (expanded) "Collapse explanation" else "Show explanation",
+                tint = if (expanded) colors.TextPrimary else colors.TextSecondary,
+                modifier = Modifier.size(20.dp)
+            )
+        }
+
+        // ── Expanded explanation with distinct background & md internal padding ──
+        AnimatedVisibility(
+            visible = expanded,
+            enter = fadeIn(tween(200)) + expandVertically(
+                animationSpec = tween(250, easing = FastOutSlowInEasing)
+            ),
+            exit = fadeOut(tween(150)) + shrinkVertically(
+                animationSpec = tween(200, easing = FastOutSlowInEasing)
+            )
+        ) {
+            Surface(
+                modifier = Modifier
+                    .fillMaxWidth()
+                    .padding(start = 32.dp, end = 4.dp, top = 2.dp, bottom = 8.dp),
+                color = colors.ExpandedSurface,
+                shape = RoundedCornerShape(16.dp)
+            ) {
+                Text(
+                    text = safeguardExplanations[clause]
+                        ?: "$clause: Standard protection clause that must be included to safeguard tenant rights.",
+                    style = LGType.BodySmall.copy(
+                        lineHeight = 19.sp,
+                        color = colors.TextPrimary
+                    ),
+                    modifier = Modifier.padding(com.example.ui.primitives.LGSpacing.md)
+                )
+            }
+        }
+    }
+}
+
+
+// ═══════════════════════════════════════════════════════════════════════════════
 // REUSABLE: Red Flag Detail Card (Expandable Accordion + Checkbox)
 // ═══════════════════════════════════════════════════════════════════════════════
-// Elevated card with 16dp corners, 4dp elevation. Pill-shaped severity badge
+// Elevated card with 24dp corners, 2dp elevation. Pill-shaped severity badge
 // with solid color background and white text.
 
 @Composable
@@ -1054,6 +1247,7 @@ private fun RedFlagCard(
     isChecked: Boolean,
     onCheckedChange: (Boolean) -> Unit
 ) {
+    val colors = LocalLGColors.current
     val sevColor = severityColor(flag.severity)
     val sevLabel = severityLabel(flag.severity)
     var expanded by remember { mutableStateOf(false) }
@@ -1072,20 +1266,20 @@ private fun RedFlagCard(
                     stiffness = Spring.StiffnessMedium
                 )
             ),
-        shape = RoundedCornerShape(16.dp),        // 16dp rounded corners
+        shape = RoundedCornerShape(24.dp),
         colors = CardDefaults.elevatedCardColors(
-            containerColor = MaterialTheme.colorScheme.surface
+            containerColor = colors.Surface
         ),
         elevation = CardDefaults.elevatedCardElevation(
-            defaultElevation = 4.dp                // Modern depth
+            defaultElevation = 2.dp
         )
     ) {
-        Column(modifier = Modifier.padding(start = 4.dp, end = 16.dp, top = 8.dp, bottom = 8.dp)) {
+        Column(modifier = Modifier.padding(start = 8.dp, end = 20.dp, top = 10.dp, bottom = 10.dp)) {
             // ── Collapsed Header: Checkbox + Title + Pill Badge + Chevron ──
             Row(
                 modifier = Modifier
                     .fillMaxWidth()
-                    .defaultMinSize(minHeight = 48.dp)
+                    .defaultMinSize(minHeight = 52.dp)
                     .clickable { expanded = !expanded },
                 verticalAlignment = Alignment.CenterVertically
             ) {
@@ -1093,20 +1287,22 @@ private fun RedFlagCard(
                     checked = isChecked,
                     onCheckedChange = onCheckedChange,
                     colors = CheckboxDefaults.colors(
-                        checkedColor = MaterialTheme.colorScheme.primary,
-                        uncheckedColor = MaterialTheme.colorScheme.onSurfaceVariant
+                        checkedColor = if (colors == LGColorsDark) Color(0xFF2E7D32) else Color(0xFF0A192F),
+                        uncheckedColor = colors.TextSecondary
                     )
                 )
                 Text(
                     text = flag.displayName,
-                    style = MaterialTheme.typography.titleSmall,
-                    color = MaterialTheme.colorScheme.onSurface,
+                    style = LGType.Title.copy(
+                        fontSize = 15.sp,
+                        fontWeight = FontWeight.SemiBold
+                    ),
+                    color = colors.TextPrimary,
                     modifier = Modifier.weight(1f)
                 )
                 Spacer(modifier = Modifier.width(8.dp))
 
                 // ── Pill-shaped severity badge ───────────────────────────
-                // Solid vibrant background with pure white bold text.
                 LGBadge(
                     text = sevLabel,
                     color = sevColor
@@ -1116,7 +1312,7 @@ private fun RedFlagCard(
                 Icon(
                     imageVector = Icons.Filled.ExpandMore,
                     contentDescription = if (expanded) "Collapse" else "Expand",
-                    tint = MaterialTheme.colorScheme.onSurfaceVariant,
+                    tint = colors.TextSecondary,
                     modifier = Modifier
                         .size(24.dp)
                         .rotate(chevronRotation)
@@ -1133,24 +1329,26 @@ private fun RedFlagCard(
                 ) {
                     Text(
                         text = flag.explanation,
-                        style = MaterialTheme.typography.bodyMedium,
-                        color = MaterialTheme.colorScheme.onSurfaceVariant,
+                        style = LGType.Body.copy(
+                            lineHeight = 20.sp
+                        ),
+                        color = colors.TextSecondary,
                         maxLines = Int.MAX_VALUE
                     )
                     if (flag.matchedSnippet.isNotBlank()) {
                         Spacer(modifier = Modifier.height(10.dp))
                         Surface(
                             modifier = Modifier.fillMaxWidth(),
-                            color = MaterialTheme.colorScheme.surfaceVariant.copy(alpha = 0.5f),
-                            shape = RoundedCornerShape(8.dp)
+                            color = colors.ExpandedSurface,
+                            shape = RoundedCornerShape(16.dp)
                         ) {
                             Text(
                                 text = "\"${flag.matchedSnippet}\"",
-                                style = MaterialTheme.typography.bodySmall.copy(
-                                    fontFamily = androidx.compose.ui.text.font.FontFamily.Monospace
+                                style = LGType.Mono.copy(
+                                    lineHeight = 17.sp
                                 ),
-                                color = MaterialTheme.colorScheme.onSurfaceVariant,
-                                modifier = Modifier.padding(12.dp),
+                                color = colors.TextPrimary,
+                                modifier = Modifier.padding(14.dp),
                                 maxLines = Int.MAX_VALUE
                             )
                         }

@@ -3,47 +3,44 @@ package com.example.ui.theme
 import androidx.compose.ui.graphics.Color
 
 // ═══════════════════════════════════════════════════════════════════════════════
-// My Legal Guardian — Premium Design System Color Palette
+// My Legal Guardian — Defined Color Tokens
 // ═══════════════════════════════════════════════════════════════════════════════
 
-// ── Light Theme: Off-White & Navy ──────────────────────────────────────────────
-// Background uses off-white to make cards pop with natural contrast.
-val OffWhiteBackground = Color(0xFFF8F9FA)
-val NavyPrimary = Color(0xFF0B132B)        // Deep, rich Navy Blue — primary action color
-val DeepSlateText = Color(0xFF1C2541)      // High-readability text — never pure #000
-val WhiteCard = Color(0xFFFFFFFF)          // Pure white cards for maximum elevation contrast
+// ── Light Theme: Cream & Navy ────────────────────────────────────────────────
+val OffWhiteBackground = Color(0xFFF9F9F7)  // Cream #F9F9F7
+val NavyPrimary = Color(0xFF0A192F)         // Navy #0A192F
+val DeepSlateText = Color(0xFF0A192F)       // Navy #0A192F
+val WhiteCard = Color(0xFFFFFFFF)           // Pure white
 
-// ── Dark Theme: Charcoal & Soft White ─────────────────────────────────────────
-val CharcoalCanvas = Color(0xFF0D1117)     // GitHub-style deep dark background
-val ElevatedCardDark = Color(0xFF161B22)   // Slightly lifted card surface
-val SoftWhiteText = Color(0xFFE6EDF3)      // Soft white text for dark mode readability
+// ── Dark Theme: #121212 & Soft White ─────────────────────────────────────────
+val CharcoalCanvas = Color(0xFF121212)      // Dark background #121212
+val ElevatedCardDark = Color(0xFF1E1E1E)    // Dark card surface #1E1E1E
+val SoftWhiteText = Color(0xFFE6EDF3)       // Soft white
 
 // ── Accent: Risk & Status ─────────────────────────────────────────────────────
-// These colors are used for risk badges, banners, and severity indicators.
-val CrimsonRisk = Color(0xFFD90429)        // Vivid Crimson Red — alert/risk
-val EmeraldSafe = Color(0xFF2A9D8F)        // Emerald Green — success/safe
-val AmberWarning = Color(0xFFE9A319)       // Rich Amber — moderate risk/warning
+val CrimsonRisk = Color(0xFFFF4B4B)         // Soft Coral/Red #FF4B4B
+val EmeraldSafe = Color(0xFF2E7D32)         // Green #2E7D32
+val AmberWarning = Color(0xFFF9A825)        // Amber #F9A825
 
 // ── Neutral: Borders, Subtexts ────────────────────────────────────────────────
-val SlateBorderLight = Color(0xFFDDE1E6)   // Subtle light mode border
-val SlateBorderDark = Color(0xFF30363D)    // Subtle dark mode border
-val SubtextLight = Color(0xFF5A6677)       // Muted secondary text — light mode
-val SubtextDark = Color(0xFF8B949E)        // Muted secondary text — dark mode
+val SlateBorderLight = Color(0xFFE8EAE6)
+val SlateBorderDark = Color(0xFF2C2C2C)
+val SubtextLight = Color(0xFF5A6677)
+val SubtextDark = Color(0xFF9E9E9E)
 
 // ── M3 Container Colors for Banners ───────────────────────────────────────────
-// Used inside status banners (risk detected, all-clear, etc.)
-val CrimsonContainerLight = Color(0xFFFDE8EB)   // Soft pink tint for error containers
-val CrimsonContainerDark = Color(0xFF3D0711)     // Deep crimson tint for dark error containers
-val CrimsonOnContainerLight = Color(0xFFB80320)  // Readable text on light error container
-val CrimsonOnContainerDark = Color(0xFFFFB4AB)   // Readable text on dark error container
+val CrimsonContainerLight = Color(0xFFFF4B4B).copy(alpha = 0.08f)
+val CrimsonContainerDark = Color(0xFFFF4B4B).copy(alpha = 0.15f)
+val CrimsonOnContainerLight = Color(0xFFFF4B4B)
+val CrimsonOnContainerDark = Color(0xFFFF7878)
 
-val EmeraldContainerLight = Color(0xFFE0F5F1)    // Soft green tint for success containers
-val EmeraldContainerDark = Color(0xFF0A2E28)      // Deep green tint for dark success containers
-val EmeraldOnContainerLight = Color(0xFF1A7A6E)   // Readable text on light success container
-val EmeraldOnContainerDark = Color(0xFFA0DDD3)    // Readable text on dark success container
+val EmeraldContainerLight = Color(0xFFE8F5E9)
+val EmeraldContainerDark = Color(0xFF1B3B1D)
+val EmeraldOnContainerLight = Color(0xFF2E7D32)
+val EmeraldOnContainerDark = Color(0xFF81C784)
 
-// ── Primary Container (for icon backgrounds, etc.) ────────────────────────────
-val NavyContainerLight = Color(0xFFE2E5EB)        // Light navy tint
-val NavyContainerDark = Color(0xFF1C2541)          // Dark navy tint
-val NavyOnContainerLight = Color(0xFF0B132B)       // Text on light navy container
-val NavyOnContainerDark = Color(0xFFCCD3E0)        // Text on dark navy container
+// ── Primary Container ────────────────────────────────────────────────────────
+val NavyContainerLight = Color(0xFFE2E5EB)
+val NavyContainerDark = Color(0xFF1E2638)
+val NavyOnContainerLight = Color(0xFF0A192F)
+val NavyOnContainerDark = Color(0xFFE6EDF3)
