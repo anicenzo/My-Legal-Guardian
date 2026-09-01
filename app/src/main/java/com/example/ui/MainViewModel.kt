@@ -27,8 +27,11 @@ import com.qonversion.android.sdk.dto.products.QProduct
 import com.qonversion.android.sdk.listeners.QonversionProductsCallback
 import kotlinx.coroutines.flow.Flow
 import kotlinx.coroutines.flow.MutableStateFlow
+import kotlinx.coroutines.flow.SharingStarted
 import kotlinx.coroutines.flow.StateFlow
 import kotlinx.coroutines.flow.asStateFlow
+import kotlinx.coroutines.flow.first
+import kotlinx.coroutines.flow.stateIn
 import kotlinx.coroutines.launch
 import java.util.UUID
 
@@ -69,12 +72,17 @@ class MainViewModel(
 ) : AndroidViewModel(application) {
     private val _uiState = MutableStateFlow<AuditState>(AuditState.Idle)
     val uiState: StateFlow<AuditState> = _uiState.asStateFlow()
-    val auditState: StateFlow<AuditState> = _uiState.asStateFlow()
+    val auditState: StateFlow<AuditState> = _uiState.asStateFlow() // Backwards-compatible alias
 
-    private val _isDarkMode = MutableStateFlow(false)
-    val isDarkMode: StateFlow<Boolean> = _isDarkMode.asStateFlow()
+    val isDarkMode: StateFlow<Boolean> = preferenceManager.isDarkMode.stateIn(
+        scope = viewModelScope,
+        started = SharingStarted.WhileSubscribed(5000),
+        initialValue = false
+    )
 
     val isProUser = MutableStateFlow(false)
+
+    val biometricLock: Flow<Boolean> = preferenceManager.biometricLock
 
     private val _proProductPrice = MutableStateFlow<String?>(null)
     val proProductPrice: StateFlow<String?> = _proProductPrice.asStateFlow()
@@ -199,7 +207,9 @@ class MainViewModel(
     }
 
     fun toggleTheme() {
-        _isDarkMode.value = !_isDarkMode.value
+        viewModelScope.launch {
+            preferenceManager.setDarkMode(!isDarkMode.value)
+        }
     }
 
     fun getScannerClient() = scannerEngine.getScannerClient()
@@ -217,8 +227,16 @@ class MainViewModel(
                     _uiState.value = AuditState.Error("Could not extract any text from the scanned documents.")
                     return@launch
                 }
+
+                val userCountry = preferenceManager.defaultCountry.first()
+                val userContractType = preferenceManager.defaultContractType.first()
+
                 _uiState.value = AuditState.Analyzing
-                val result = legalAuditEngine.analyzeContract(extractedText)
+                val result = legalAuditEngine.analyzeContract(
+                    rawText = extractedText,
+                    country = userCountry,
+                    contractType = userContractType
+                )
                 val calculatedScore = result.overallRiskScore
 
                 val drafts = result.matchedRedFlags.associate { flag ->
@@ -234,12 +252,12 @@ class MainViewModel(
                 val docTitle = if (firstCleanLine.length > 5) firstCleanLine else "Audited Contract"
                 val docId = UUID.randomUUID().toString()
 
-                // Persist full audit result to Room Database
+                // Persist full audit result to Room Database with user settings
                 val docEntity = DocumentEntity(
                     id = docId,
                     title = docTitle,
-                    country = "US",
-                    contractType = "lease",
+                    country = userCountry,
+                    contractType = userContractType,
                     dateScanned = System.currentTimeMillis(),
                     pageCount = uris.size,
                     rawText = extractedText
@@ -298,6 +316,100 @@ class MainViewModel(
                 )
             } catch (e: Exception) {
                 _uiState.value = AuditState.Error(e.localizedMessage ?: "Unknown error occurred")
+            }
+        }
+    }
+
+    fun processExtractedText(text: String, title: String = "Imported Document") {
+        if (text.isBlank()) {
+            _uiState.value = AuditState.Error("Document text is empty.")
+            return
+        }
+        viewModelScope.launch {
+            try {
+                val userCountry = preferenceManager.defaultCountry.first()
+                val userContractType = preferenceManager.defaultContractType.first()
+
+                _uiState.value = AuditState.Analyzing
+                val result = legalAuditEngine.analyzeContract(
+                    rawText = text,
+                    country = userCountry,
+                    contractType = userContractType
+                )
+                val calculatedScore = result.overallRiskScore
+
+                val drafts = result.matchedRedFlags.associate { flag ->
+                    flag.displayName to com.example.engine.NegotiationTemplateEngine.generateDraft(
+                        category = flag.displayName,
+                        clauseText = flag.matchedSnippet.ifBlank { flag.explanation },
+                        isPro = isProUser.value
+                    )
+                }
+
+                val docId = UUID.randomUUID().toString()
+                val docEntity = DocumentEntity(
+                    id = docId,
+                    title = title,
+                    country = userCountry,
+                    contractType = userContractType,
+                    dateScanned = System.currentTimeMillis(),
+                    pageCount = 1,
+                    rawText = text
+                )
+
+                val clauseEntities = result.matchedRedFlags.mapIndexed { idx, flag ->
+                    ClauseEntity(
+                        id = UUID.randomUUID().toString(),
+                        documentId = docId,
+                        orderIndex = idx,
+                        text = flag.matchedSnippet.ifBlank { flag.explanation },
+                        category = flag.category,
+                        severity = flag.severity,
+                        complexityScore = 0f,
+                        verdictSource = "TIER1",
+                        confidence = null
+                    )
+                }
+
+                val missingEntities = result.missingMandatoryClauses.map { missing ->
+                    MissingProtectionEntity(
+                        id = UUID.randomUUID().toString(),
+                        documentId = docId,
+                        protectionType = missing,
+                        isPresent = false
+                    )
+                }
+
+                val draftEntities = drafts.map { (cat, draft) ->
+                    NegotiationDraftEntity(
+                        id = UUID.randomUUID().toString(),
+                        documentId = docId,
+                        clauseId = cat,
+                        draftText = draft
+                    )
+                }
+
+                contractRepository.saveFullAuditResult(
+                    document = docEntity,
+                    clauses = clauseEntities,
+                    missingProtections = missingEntities,
+                    negotiationDrafts = draftEntities
+                )
+
+                _uiState.value = AuditState.Result(
+                    documentId = docId,
+                    documentTitle = title,
+                    matchedRedFlags = result.matchedRedFlags,
+                    missingMandatoryClauses = result.missingMandatoryClauses,
+                    isHighRisk = result.isHighRisk,
+                    extractedText = text,
+                    overallRiskScore = calculatedScore,
+                    complexityScoreOverall = 0,
+                    realCostBreakdown = null,
+                    negotiationDrafts = drafts
+                )
+            } catch (e: Exception) {
+                _uiState.value = AuditState.Error(e.localizedMessage ?: "Failed to analyze document")
             }
         }
     }
@@ -376,5 +488,20 @@ class MainViewModel(
     override fun onCleared() {
         super.onCleared()
         legalAuditEngine.close()
+    }
+}
+
+class MainViewModelFactory(
+    private val application: Application,
+    private val scannerEngine: ScannerEngine,
+    private val legalAuditEngine: LegalAuditEngine,
+    private val preferenceManager: PreferenceManager
+) : androidx.lifecycle.ViewModelProvider.Factory {
+    @Suppress("UNCHECKED_CAST")
+    override fun <T : ViewModel> create(modelClass: Class<T>): T {
+        if (modelClass.isAssignableFrom(MainViewModel::class.java)) {
+            return MainViewModel(application, scannerEngine, legalAuditEngine, preferenceManager) as T
+        }
+        throw IllegalArgumentException("Unknown ViewModel class: ${modelClass.name}")
     }
 }

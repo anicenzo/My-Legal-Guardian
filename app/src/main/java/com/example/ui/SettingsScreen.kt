@@ -21,6 +21,7 @@ import androidx.compose.ui.platform.LocalContext
 import androidx.compose.ui.text.font.FontWeight
 import androidx.compose.ui.unit.dp
 import androidx.compose.ui.unit.sp
+import com.example.ui.home.StudioFooter
 import com.example.ui.primitives.LGColorsDark
 import com.example.ui.primitives.LGSpacing
 import com.example.ui.primitives.LGType
@@ -156,9 +157,9 @@ fun SettingsScreen(
                             modifier = Modifier
                                 .fillMaxWidth()
                                 .defaultMinSize(minHeight = 52.dp),
-                            shape = RoundedCornerShape(24.dp),
+                            shape = RoundedCornerShape(12.dp),
                             colors = ButtonDefaults.elevatedButtonColors(
-                                containerColor = if (isDark) Color(0xFF2E7D32) else Color(0xFF0A192F),
+                                containerColor = colors.PrimaryAccent,
                                 contentColor = Color.White
                             ),
                             elevation = ButtonDefaults.buttonElevation(

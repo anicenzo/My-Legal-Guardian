@@ -38,10 +38,106 @@ fun VaultScreen(
     onScanClick: () -> Unit,
     modifier: Modifier = Modifier
 ) {
+    val context = androidx.compose.ui.platform.LocalContext.current
+    val activity = context as? androidx.fragment.app.FragmentActivity
+    val isBiometricEnabled by viewModel.biometricLock.collectAsState(initial = false)
+    var isUnlocked by remember(isBiometricEnabled) { mutableStateOf(!isBiometricEnabled) }
+    var authError by remember { mutableStateOf<String?>(null) }
+
+    fun triggerAuth() {
+        if (activity != null && com.example.util.BiometricAuthHelper.canAuthenticate(context)) {
+            com.example.util.BiometricAuthHelper.promptBiometric(
+                activity = activity,
+                title = "Unlock Vault",
+                subtitle = "Authenticate to access confidential contracts",
+                onSuccess = {
+                    isUnlocked = true
+                    authError = null
+                },
+                onError = { err ->
+                    authError = err
+                }
+            )
+        } else {
+            isUnlocked = true
+        }
+    }
+
+    LaunchedEffect(isBiometricEnabled) {
+        if (isBiometricEnabled && !isUnlocked) {
+            triggerAuth()
+        }
+    }
+
     val isDarkMode by viewModel.isDarkMode.collectAsState()
     val savedDocs by viewModel.savedDocuments.collectAsState(initial = emptyList())
     val colors = LocalLGColors.current
     val isDark = colors == LGColorsDark
+
+    if (isBiometricEnabled && !isUnlocked) {
+        Column(
+            modifier = modifier
+                .fillMaxSize()
+                .background(colors.Background)
+                .padding(32.dp),
+            horizontalAlignment = Alignment.CenterHorizontally,
+            verticalArrangement = Arrangement.Center
+        ) {
+            Box(
+                modifier = Modifier
+                    .size(72.dp)
+                    .clip(RoundedCornerShape(20.dp))
+                    .background(colors.PrimaryAccent),
+                contentAlignment = Alignment.Center
+            ) {
+                Icon(
+                    imageVector = Icons.Filled.Lock,
+                    contentDescription = "Locked",
+                    tint = Color.White,
+                    modifier = Modifier.size(36.dp)
+                )
+            }
+            Spacer(modifier = Modifier.height(24.dp))
+            Text(
+                text = "Vault Locked",
+                style = LGType.Headline,
+                color = colors.TextPrimary
+            )
+            Spacer(modifier = Modifier.height(8.dp))
+            Text(
+                text = "Biometric protection is enabled for your confidential contract history.",
+                style = LGType.BodySmall,
+                color = colors.TextSecondary,
+                textAlign = androidx.compose.ui.text.style.TextAlign.Center
+            )
+            if (authError != null) {
+                Spacer(modifier = Modifier.height(12.dp))
+                Text(
+                    text = authError ?: "",
+                    style = LGType.Caption,
+                    color = colors.AccentDanger,
+                    textAlign = androidx.compose.ui.text.style.TextAlign.Center
+                )
+            }
+            Spacer(modifier = Modifier.height(28.dp))
+            Button(
+                onClick = { triggerAuth() },
+                modifier = Modifier
+                    .fillMaxWidth()
+                    .height(56.dp),
+                shape = RoundedCornerShape(12.dp),
+                colors = ButtonDefaults.elevatedButtonColors(
+                    containerColor = colors.PrimaryAccent,
+                    contentColor = Color.White
+                )
+            ) {
+                Icon(Icons.Filled.Fingerprint, contentDescription = null, tint = Color.White)
+                Spacer(modifier = Modifier.width(8.dp))
+                Text("Unlock Vault", style = LGType.Button, color = Color.White)
+            }
+        }
+        return
+    }
 
     Column(
         modifier = modifier
@@ -125,18 +221,8 @@ fun VaultScreen(
                         Box(
                             modifier = Modifier
                                 .size(72.dp)
-                                .clip(RoundedCornerShape(24.dp))
-                                .background(
-                                    if (isDark) {
-                                        androidx.compose.ui.graphics.Brush.linearGradient(
-                                            listOf(Color(0xFF1E2638), Color(0xFF161E2E))
-                                        )
-                                    } else {
-                                        androidx.compose.ui.graphics.Brush.linearGradient(
-                                            listOf(Color(0xFF0A192F), Color(0xFF1E3A5F))
-                                        )
-                                    }
-                                ),
+                                .clip(RoundedCornerShape(20.dp))
+                                .background(colors.PrimaryAccent),
                             contentAlignment = Alignment.Center
                         ) {
                             Icon(
@@ -166,9 +252,9 @@ fun VaultScreen(
                                 .fillMaxWidth()
                                 .defaultMinSize(minHeight = 56.dp)
                                 .height(56.dp),
-                            shape = RoundedCornerShape(24.dp),
+                            shape = RoundedCornerShape(12.dp),
                             colors = ButtonDefaults.elevatedButtonColors(
-                                containerColor = if (isDark) Color(0xFF2E7D32) else Color(0xFF0A192F),
+                                containerColor = colors.PrimaryAccent,
                                 contentColor = Color.White
                             ),
                             elevation = ButtonDefaults.buttonElevation(

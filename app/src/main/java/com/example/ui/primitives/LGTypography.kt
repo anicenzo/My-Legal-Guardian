@@ -67,6 +67,15 @@ object LGType {
         letterSpacing = 0.15.sp
     )
 
+    // ── Button: Interactive action labels ────────────────────────────────
+    val Button = TextStyle(
+        fontFamily = FontFamily.SansSerif,
+        fontWeight = FontWeight.Bold,
+        fontSize = 15.sp,
+        lineHeight = 20.sp,
+        letterSpacing = 0.2.sp
+    )
+
     // ── Label: Badges, button labels, uppercase indicators ────────────────
     val Label = TextStyle(
         fontFamily = FontFamily.SansSerif,

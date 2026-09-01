@@ -93,7 +93,7 @@ fun LGBottomNav(
             ) {
                 items.forEach { (route, label, icon) ->
                     val isSelected = selectedRoute == route
-                    val activeColor = colors.TextPrimary
+                    val activeColor = colors.PrimaryAccent
                     val inactiveColor = colors.TextSecondary
 
                     Column(
@@ -324,16 +324,13 @@ fun LGSurface(
     val isDark = colors == LGColorsDark
     val shape = RoundedCornerShape(24.dp)  // 24dp Soft UI radius
 
-    val borderModifier = if (isDark) {
-        Modifier.border(1.dp, colors.Border, shape)
-    } else {
-        Modifier.shadow(
-            elevation = 3.dp,
-            shape = shape,
-            ambientColor = Color.Black.copy(alpha = 0.05f),
-            spotColor = Color.Black.copy(alpha = 0.05f)
-        )
-    }
+    // Anti-slop: subtle navy shadow for both themes, no thick borders
+    val borderModifier = Modifier.shadow(
+        elevation = if (isDark) 2.dp else 3.dp,
+        shape = shape,
+        ambientColor = Color(0xFF0A142F).copy(alpha = if (isDark) 0.3f else 0.08f),
+        spotColor = Color(0xFF0A142F).copy(alpha = if (isDark) 0.2f else 0.06f)
+    )
 
     Box(
         modifier = modifier
@@ -356,31 +353,25 @@ fun LGButton(
     onClick: () -> Unit,
     modifier: Modifier = Modifier,
     filled: Boolean = true,
-    color: Color = LocalLGColors.current.TextPrimary,
+    color: Color = LocalLGColors.current.PrimaryAccent,
     textColor: Color? = null,
     enabled: Boolean = true,
     content: @Composable RowScope.() -> Unit
 ) {
     val colors = LocalLGColors.current
-    val shape = RoundedCornerShape(24.dp)  // 24dp Soft UI radius
+    val shape = RoundedCornerShape(12.dp)  // Anti-slop: crisp 12dp radius
 
     val interactionSource = remember { MutableInteractionSource() }
     val isPressed by interactionSource.collectIsPressedAsState()
     val scale by animateFloatAsState(if (isPressed) 0.97f else 1.0f, label = "scale")
 
+    // Anti-slop: NO glowing drop shadows, NO gradients. Solid fill only.
     val buttonModifier = if (filled) {
-        Modifier
-            .shadow(
-                elevation = if (isPressed) 2.dp else 4.dp,
-                shape = shape,
-                ambientColor = color.copy(alpha = 0.15f),
-                spotColor = color.copy(alpha = 0.10f)
-            )
-            .background(color, shape)
+        Modifier.background(color, shape)
     } else {
         Modifier
             .background(colors.Surface, shape)
-            .border(1.5.dp, colors.Border, shape)
+            .border(1.dp, colors.Border, shape)
     }
 
     Box(
@@ -404,7 +395,7 @@ fun LGButton(
             verticalAlignment = Alignment.CenterVertically
         ) {
             val resolvedTextColor = textColor ?: if (filled) {
-                if (color == colors.TextPrimary) colors.Background else Color.White
+                Color.White  // Anti-slop: crisp white text on accent buttons
             } else {
                 colors.TextPrimary
             }

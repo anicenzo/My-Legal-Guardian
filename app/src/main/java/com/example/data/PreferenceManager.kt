@@ -24,7 +24,12 @@ class PreferenceManager(private val context: Context) {
         private val DEFAULT_CONTRACT_TYPE_KEY = stringPreferencesKey("default_contract_type")
         private val LAST_SCAN_DATE_KEY = stringPreferencesKey("last_scan_date")
         private val SCANS_USED_TODAY_KEY = intPreferencesKey("scans_used_today")
+        private val DARK_MODE_KEY = booleanPreferencesKey("dark_mode")
         const val MAX_FREE_DAILY_SCANS = 3
+    }
+
+    val isDarkMode: Flow<Boolean> = context.dataStore.data.map { preferences ->
+        preferences[DARK_MODE_KEY] ?: false
     }
 
     val isPro: Flow<Boolean> = context.dataStore.data.map { preferences ->
@@ -95,6 +100,12 @@ class PreferenceManager(private val context: Context) {
     suspend fun setDefaultContractType(contractType: String) {
         context.dataStore.edit { preferences ->
             preferences[DEFAULT_CONTRACT_TYPE_KEY] = contractType
+        }
+    }
+
+    suspend fun setDarkMode(enabled: Boolean) {
+        context.dataStore.edit { preferences ->
+            preferences[DARK_MODE_KEY] = enabled
         }
     }
 }

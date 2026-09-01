@@ -83,21 +83,18 @@ dependencies {
 
   implementation(libs.androidx.room.ktx)
   implementation(libs.androidx.room.runtime)
-  implementation(libs.coil.compose)
   
   // Offline scanning & LiteRT ML logic
   implementation(libs.play.services.mlkit.document.scanner)
   implementation(libs.play.services.mlkit.text.recognition)
   implementation(libs.play.services.tflite.java)
   
-  // In-app Billing for Pro upgrade
-  implementation(libs.play.billing)
+  // In-app Billing for Pro upgrade (managed via Qonversion)
   implementation(libs.androidx.biometric)
   implementation("io.qonversion.android.sdk:sdk:9.4.1")
   
   implementation(libs.kotlinx.coroutines.android)
   implementation(libs.kotlinx.coroutines.core)
-  implementation(libs.moshi.kotlin)
 
   testImplementation(libs.androidx.compose.ui.test.junit4)
   testImplementation(libs.androidx.core)
@@ -119,5 +116,4 @@ dependencies {
   debugImplementation(libs.androidx.compose.ui.tooling)
 
   "ksp"(libs.androidx.room.compiler)
-  "ksp"(libs.moshi.kotlin.codegen)
 }

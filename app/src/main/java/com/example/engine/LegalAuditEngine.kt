@@ -68,14 +68,17 @@ class LegalAuditEngine(private val context: Context) {
     private val vocabMap = mutableMapOf<String, Int>()
 
     companion object {
+        const val MIN_VOCAB_SIZE_FOR_TIER2 = 500
+        private const val TAG = "LegalAuditEngine"
+
         fun calculateRiskScore(
             matchedRedFlags: List<MatchedRedFlag>,
             missingMandatoryClauses: List<String>
         ): Int = AuditResult.calculateRiskScore(matchedRedFlags, missingMandatoryClauses)
     }
 
-    // Standard mandatory safeguards (Opt-In Detection)
-    private val mandatorySafeguards = listOf(
+    // Standard mandatory safeguards by contract type (Opt-In Detection)
+    private val leaseSafeguards = listOf(
         "Notice to Cure / Default Period",
         "Right to Quiet Enjoyment",
         "Mutual Termination Rights",
@@ -83,14 +86,41 @@ class LegalAuditEngine(private val context: Context) {
         "Landlord Maintenance Obligations"
     )
 
+    private val freelanceSafeguards = listOf(
+        "Payment Terms / Late Payment Fee",
+        "IP Ownership Assigned Upon Payment",
+        "Mutual Termination & Notice Window",
+        "Cap on Aggregate Liability",
+        "Scope of Work & Revision Terms"
+    )
+
+    private val employmentSafeguards = listOf(
+        "Written Termination Notice Period",
+        "Reasonable Non-Compete Scope",
+        "Invention Assignment Carve-Out",
+        "Mutual Confidentiality Protections",
+        "Dispute Resolution in Local Court"
+    )
+
     init {
         try {
-            interpreter = InterpreterApi.create(loadModelFile(), InterpreterApi.Options())
             loadVocab()
+            if (vocabMap.size < MIN_VOCAB_SIZE_FOR_TIER2) {
+                android.util.Log.w(
+                    TAG,
+                    "Startup Sanity Check: vocab.txt contains ${vocabMap.size} entries (< $MIN_VOCAB_SIZE_FOR_TIER2 minimum). Tier-2 ML model is disabled; audit will rely 100% on Tier-1 deterministic legal rules."
+                )
+                interpreter = null
+            } else {
+                interpreter = InterpreterApi.create(loadModelFile(), InterpreterApi.Options())
+            }
         } catch (e: Exception) {
-            e.printStackTrace()
+            android.util.Log.w(TAG, "Tier-2 ML initialization bypassed: ${e.message}. Using Tier-1 deterministic legal rules.")
+            interpreter = null
         }
     }
+
+    fun isTier2Active(): Boolean = interpreter != null && vocabMap.size >= MIN_VOCAB_SIZE_FOR_TIER2
 
     private fun loadModelFile(): MappedByteBuffer {
         val fileDescriptor = context.assets.openFd("model.tflite")
@@ -114,34 +144,39 @@ class LegalAuditEngine(private val context: Context) {
             }
             reader.close()
         } catch (e: Exception) {
-            e.printStackTrace()
+            android.util.Log.w(TAG, "Could not load vocab.txt: ${e.message}")
         }
     }
 
-    suspend fun analyzeContract(rawText: String): AuditResult = withContext(Dispatchers.Default) {
+    suspend fun analyzeContract(
+        rawText: String,
+        country: String = "US",
+        contractType: String = "lease"
+    ): AuditResult = withContext(Dispatchers.Default) {
         val matchedRedFlags = mutableListOf<MatchedRedFlag>()
         
-        matchedRedFlags.addAll(performEnhancedRuleCheck(rawText))
+        matchedRedFlags.addAll(performEnhancedRuleCheck(rawText, contractType))
         
-        // Split text into simple paragraphs for Tier 2 evaluation
-        val paragraphs = rawText.split("\n").filter { it.trim().length > 50 }
-
-        for (paragraph in paragraphs) {
-            if (performTier2TFLiteCheck(paragraph)) {
-                matchedRedFlags.add(
-                    MatchedRedFlag(
-                        category = "TFLITE_MODEL_FLAG",
-                        displayName = "AI Risk Detection",
-                        matchedSnippet = if (paragraph.length > 100) paragraph.substring(0, 100) + "..." else paragraph,
-                        severity = 2,
-                        explanation = "The AI model detected potential predatory language."
+        // Tier 2 ML Evaluation (Only if active and vocabulary is verified)
+        if (isTier2Active()) {
+            val paragraphs = rawText.split("\n").filter { it.trim().length > 50 }
+            for (paragraph in paragraphs) {
+                if (performTier2TFLiteCheck(paragraph)) {
+                    matchedRedFlags.add(
+                        MatchedRedFlag(
+                            category = "TFLITE_MODEL_FLAG",
+                            displayName = "AI Risk Detection",
+                            matchedSnippet = if (paragraph.length > 100) paragraph.substring(0, 100) + "..." else paragraph,
+                            severity = 2,
+                            explanation = "The AI model detected potential predatory language."
+                        )
                     )
-                )
+                }
             }
         }
 
-        // Logic for missing safeguards (Opt-In): 
-        val missingClauses = performOptInSafeguardCheck(rawText)
+        // Logic for missing safeguards (Opt-In):
+        val missingClauses = performOptInSafeguardCheck(rawText, contractType)
 
         val isHighRisk = matchedRedFlags.any { it.severity == 3 }
 
@@ -152,12 +187,18 @@ class LegalAuditEngine(private val context: Context) {
         )
     }
 
-    private fun performOptInSafeguardCheck(text: String): List<String> {
+    private fun performOptInSafeguardCheck(text: String, contractType: String): List<String> {
         val lowerText = text.lowercase()
         val missing = mutableListOf<String>()
+        val safeguards = when (contractType.lowercase()) {
+            "freelance", "contractor" -> freelanceSafeguards
+            "employment" -> employmentSafeguards
+            else -> leaseSafeguards
+        }
         
-        for (safeguard in mandatorySafeguards) {
+        for (safeguard in safeguards) {
             val isPresent = when(safeguard) {
+                // --- Lease Safeguards ---
                 "Notice to Cure / Default Period" -> {
                     listOf(
                         "notice to cure", "default period", "days to remedy", "cure period",
@@ -195,6 +236,53 @@ class LegalAuditEngine(private val context: Context) {
                         "maintain the property in good", "repair structural", "plumbing and electrical"
                     ).any { lowerText.contains(it) }
                 }
+                // --- Freelance / Contractor Safeguards ---
+                "Payment Terms / Late Payment Fee" -> {
+                    listOf(
+                        "payment terms", "net 30", "net 15", "net 60", "invoicing", "invoice within",
+                        "interest on late payments", "late payment fee", "milestone payment", "due upon receipt"
+                    ).any { lowerText.contains(it) }
+                }
+                "IP Ownership Assigned Upon Payment" -> {
+                    listOf(
+                        "upon full payment", "upon receipt of payment", "retention of title",
+                        "assignment effective upon payment", "pre-existing materials", "contractor retains"
+                    ).any { lowerText.contains(it) }
+                }
+                "Mutual Termination & Notice Window" -> {
+                    listOf(
+                        "either party may terminate", "written notice of termination", "kill fee",
+                        "terminate upon", "days written notice", "termination for convenience"
+                    ).any { lowerText.contains(it) }
+                }
+                "Cap on Aggregate Liability" -> {
+                    listOf(
+                        "limitation of liability", "cap on liability", "aggregate liability",
+                        "total liability shall not exceed", "fees paid under", "in no event shall liability exceed"
+                    ).any { lowerText.contains(it) }
+                }
+                "Scope of Work & Revision Terms" -> {
+                    listOf(
+                        "scope of work", "change order", "additional revisions",
+                        "written amendment", "specifications", "deliverables schedule"
+                    ).any { lowerText.contains(it) }
+                }
+                // --- Employment Safeguards ---
+                "Written Termination Notice Period" -> {
+                    listOf("notice period", "weeks notice", "severance", "written notice of termination").any { lowerText.contains(it) }
+                }
+                "Reasonable Non-Compete Scope" -> {
+                    listOf("geographic limitation", "compete within", "months following termination").any { lowerText.contains(it) }
+                }
+                "Invention Assignment Carve-Out" -> {
+                    listOf("prior inventions", "excluded inventions", "personal time and resources").any { lowerText.contains(it) }
+                }
+                "Mutual Confidentiality Protections" -> {
+                    listOf("mutual non-disclosure", "confidential information", "both parties agree to hold").any { lowerText.contains(it) }
+                }
+                "Dispute Resolution in Local Court" -> {
+                    listOf("governing law", "exclusive jurisdiction", "courts of").any { lowerText.contains(it) }
+                }
                 else -> lowerText.contains(safeguard.lowercase())
             }
             
@@ -207,30 +295,52 @@ class LegalAuditEngine(private val context: Context) {
 
     private data class Rule(val keywords: List<String>, val name: String, val severity: Int, val explanation: String)
 
-    private fun performEnhancedRuleCheck(text: String): List<MatchedRedFlag> {
+    private fun performEnhancedRuleCheck(text: String, contractType: String): List<MatchedRedFlag> {
         val lowerText = text.lowercase()
         val flags = mutableListOf<MatchedRedFlag>()
         
-        val rules = listOf(
+        // Universal Rules (all contract types)
+        val universalRules = listOf(
+            Rule(listOf("modify building policies", "right to change fees", "sole discretion to amend", "modify rules without notice", "modify terms without notice"), 
+                 "Unilateral Modification", 3, "Allows the other party to change terms or fees without your consent."),
+            Rule(listOf("waives any claim", "consequential damages", "hold harmless", "waive all claims", "indemnify and hold harmless"), 
+                 "Liability Waiver", 3, "Forces you to give up your rights to sue or claim damages."),
+            Rule(listOf("resolved exclusively through arbitration", "arbitrator selected by", "class action waiver", "waive right to jury trial"), 
+                 "Forced Arbitration", 3, "Prevents you from taking disputes to court, forcing private arbitration."),
+            Rule(listOf("late fee", "interest on late", "daily late charge"), 
+                 "Late Fee Clause", 2, "Specifies penalties or high interest for delayed payments.")
+        )
+
+        // Lease-specific Rules
+        val leaseRules = listOf(
             Rule(listOf("non-refundable", "strictly non-refundable", "nonrefundable", "forfeit deposit", "no refund", "forfeited", "deposit is non-refundable"), 
-                 "Non-Refundable Deposit", 3, "This clause implies you cannot get your money back under any circumstances."),
+                 "Non-Refundable Deposit", 3, "This clause implies you cannot get your deposit back under any circumstances."),
             Rule(listOf("early termination fee", "liquidated damages", "termination penalty", "penalty for early termination", "break lease penalty"), 
-                 "Early Termination Penalty", 3, "Imposes severe financial penalties for ending the contract early."),
+                 "Early Termination Penalty", 3, "Imposes severe financial penalties for ending the lease early."),
             Rule(listOf("prepaid rent shall be forfeited", "forfeit prepaid rent", "forfeiture of advance rent"), 
                  "Prepaid Rent Forfeiture", 3, "Forces forfeiture of advance or prepaid rent upon departure."),
             Rule(listOf("months' rent", "months rent", "remaining months", "all remaining rent"), 
-                 "Multi-Month Penalty", 3, "Requires paying multiple months of rent if terminated early."),
-            Rule(listOf("late fee", "5 days", "10%", "interest on late", "daily late charge"), 
-                 "Late Fee Clause", 2, "Specifies penalties or high interest for late payments."),
-            Rule(listOf("modify building policies", "right to change fees", "sole discretion to amend", "modify rules without notice"), 
-                 "Unilateral Modification", 3, "Allows the landlord/provider to change rules or fees without your consent."),
-            Rule(listOf("waives any claim", "consequential damages", "hold harmless", "waive all claims", "indemnify and hold harmless"), 
-                 "Liability Waiver", 3, "Forces you to give up your rights to sue or claim damages."),
-            Rule(listOf("resolved exclusively through arbitration", "arbitrator selected by landlord", "class action waiver", "waive right to jury trial"), 
-                 "Forced Arbitration", 3, "Prevents you from taking disputes to court, forcing private arbitration.")
+                 "Multi-Month Penalty", 3, "Requires paying multiple months of rent if terminated early.")
         )
+
+        // Freelance / Commercial / Employment Rules
+        val freelanceRules = listOf(
+            Rule(listOf("unlimited liability", "indemnify against all claims", "indemnify client without cap", "uncapped indemnification"),
+                 "Uncapped Liability", 3, "Exposes you to unlimited financial liability without a cap on contract value."),
+            Rule(listOf("exclusive ownership prior to payment", "irrevocable assignment prior to full payment", "work for hire regardless of payment"),
+                 "Premature IP Assignment", 3, "Transfers intellectual property before you have received full payment."),
+            Rule(listOf("worldwide non-compete", "shall not engage in any competing", "for a period of 2 years post", "restriction on all competitors"),
+                 "Overbroad Non-Compete", 3, "Excessive restriction on future clients or independent livelihood."),
+            Rule(listOf("automatically renews indefinitely", "evergreen contract", "renews without prior written notice"),
+                 "Silent Auto-Renewal Trap", 2, "Contracts that renew automatically without explicit affirmative confirmation.")
+        )
+
+        val activeRules = when (contractType.lowercase()) {
+            "freelance", "contractor", "employment" -> universalRules + freelanceRules
+            else -> universalRules + leaseRules
+        }
         
-        for (rule in rules) {
+        for (rule in activeRules) {
             for (keyword in rule.keywords) {
                 val idx = lowerText.indexOf(keyword)
                 if (idx != -1) {
@@ -284,7 +394,7 @@ class LegalAuditEngine(private val context: Context) {
         return false
     }
 
-    private fun tokenize(text: String): List<Int> {
+    fun tokenize(text: String): List<Int> {
         val words = text.split("\\s+".toRegex())
         val tokenIds = mutableListOf<Int>()
         
@@ -296,6 +406,12 @@ class LegalAuditEngine(private val context: Context) {
             }
         }
         return tokenIds
+    }
+
+    @androidx.annotation.VisibleForTesting
+    fun setVocabForTesting(vocab: Map<String, Int>) {
+        vocabMap.clear()
+        vocabMap.putAll(vocab)
     }
     
     fun close() {

@@ -25,13 +25,17 @@ abstract class AppDatabase : RoomDatabase() {
 
         fun getDatabase(context: Context): AppDatabase {
             return INSTANCE ?: synchronized(this) {
-                val instance = Room.databaseBuilder(
+                val builder = Room.databaseBuilder(
                     context.applicationContext,
                     AppDatabase::class.java,
                     "legal_guardian_database"
                 )
-                .fallbackToDestructiveMigration(dropAllTables = true)
-                .build()
+                // Only permit destructive migration in debug builds for development iteration.
+                // In production, user vault data is protected from silent wipes on schema changes.
+                if ((context.applicationInfo.flags and android.content.pm.ApplicationInfo.FLAG_DEBUGGABLE) != 0) {
+                    builder.fallbackToDestructiveMigration(dropAllTables = true)
+                }
+                val instance = builder.build()
                 INSTANCE = instance
                 instance
             }

@@ -11,63 +11,63 @@ import com.example.ui.primitives.LocalLGColors
 import androidx.compose.ui.graphics.Color
 
 // ═══════════════════════════════════════════════════════════════════════════════
-// My Legal Guardian — Material 3 Theme Configuration
+// My Legal Guardian — Material 3 Theme Configuration (Navy & White Rebrand)
 // ═══════════════════════════════════════════════════════════════════════════════
-// Wires the premium color palette and typography into M3 color schemes.
+// Wires the premium Navy & White palette into M3 color schemes.
 // The custom LGColors system is provided via CompositionLocal for components
 // that need direct access to design tokens outside of MaterialTheme.
 
 private val DarkColorScheme = darkColorScheme(
-    primary = Color(0xFF2E7D32),            // Green #2E7D32 primary accent
+    primary = ScannerBlue,                   // #0066FF primary accent
     onPrimary = Color.White,
     primaryContainer = NavyContainerDark,
     onPrimaryContainer = NavyOnContainerDark,
     secondary = EmeraldSafe,
-    onSecondary = SoftWhiteText,
+    onSecondary = Color.White,
     secondaryContainer = EmeraldContainerDark,
     onSecondaryContainer = EmeraldOnContainerDark,
     tertiary = CrimsonRisk,
-    onTertiary = SoftWhiteText,
+    onTertiary = Color.White,
     error = CrimsonRisk,
     onError = Color.White,
     errorContainer = CrimsonContainerDark,
     onErrorContainer = CrimsonOnContainerDark,
-    background = CharcoalCanvas,            // #121212 dark background
+    background = NavyCanvas,                  // Deep Navy #0A142F
     onBackground = SoftWhiteText,
-    surface = ElevatedCardDark,             // #1E1E1E dark card surface
+    surface = ElevatedCardDark,               // Elevated Navy #11224D
     onSurface = SoftWhiteText,
-    surfaceVariant = Color(0xFF1E1E1E),     // #1E1E1E
-    onSurfaceVariant = Color(0xFF9E9E9E),
+    surfaceVariant = ElevatedCardDark,
+    onSurfaceVariant = SubtextDark,
     surfaceTint = Color.Transparent,
-    outline = SlateBorderDark,             // #2C2C2C
-    outlineVariant = Color(0xFF2C2C2C),
-    surfaceContainerHighest = Color(0xFF252525)
+    outline = SlateBorderDark,
+    outlineVariant = SlateBorderDark,
+    surfaceContainerHighest = Color(0xFF162B50)
 )
 
 private val LightColorScheme = lightColorScheme(
-    primary = NavyPrimary,                  // Navy #0A192F
+    primary = ScannerBlue,                    // #0066FF primary accent
     onPrimary = Color.White,
     primaryContainer = NavyContainerLight,
     onPrimaryContainer = NavyOnContainerLight,
-    secondary = EmeraldSafe,                // Green #2E7D32
+    secondary = EmeraldSafe,
     onSecondary = Color.White,
     secondaryContainer = EmeraldContainerLight,
     onSecondaryContainer = EmeraldOnContainerLight,
-    tertiary = CrimsonRisk,                 // Red #D32F2F
+    tertiary = CrimsonRisk,
     onTertiary = Color.White,
     error = CrimsonRisk,
     onError = Color.White,
     errorContainer = CrimsonContainerLight,
     onErrorContainer = CrimsonOnContainerLight,
-    background = OffWhiteBackground,        // Cream #F9F9F7
+    background = PureWhiteBackground,         // Pure White #FFFFFF
     onBackground = DeepSlateText,
-    surface = WhiteCard,                    // White
+    surface = WhiteCard,                      // Pure White
     onSurface = DeepSlateText,
-    surfaceVariant = Color(0xFFF2F2EE),
+    surfaceVariant = Color(0xFFF7FAFC),
     onSurfaceVariant = SubtextLight,
-    outline = SlateBorderLight,             // #E2E4E0
-    outlineVariant = Color(0xFFE2E4E0),
-    surfaceContainerHighest = Color(0xFFF2F2EE)
+    outline = SlateBorderLight,
+    outlineVariant = SlateBorderLight,
+    surfaceContainerHighest = Color(0xFFF7FAFC)
 )
 
 @Composable

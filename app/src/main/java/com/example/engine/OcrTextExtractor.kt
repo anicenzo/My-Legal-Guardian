@@ -5,19 +5,32 @@ import android.graphics.Bitmap
 import android.graphics.pdf.PdfRenderer
 import android.net.Uri
 import android.os.ParcelFileDescriptor
-import android.util.Log
-import com.google.android.gms.tasks.Tasks
+import com.example.util.LocalErrorLogger
 import com.google.mlkit.vision.common.InputImage
 import com.google.mlkit.vision.text.TextRecognition
 import com.google.mlkit.vision.text.latin.TextRecognizerOptions
 import kotlinx.coroutines.Dispatchers
+import kotlinx.coroutines.suspendCancellableCoroutine
 import kotlinx.coroutines.withContext
-import java.io.File
-import java.io.FileOutputStream
+import kotlin.coroutines.resume
+import kotlin.coroutines.resumeWithException
 
 object OcrTextExtractor {
 
+    private const val TAG = "OcrTextExtractor"
+    private const val MAX_RENDER_DIMENSION = 2048f // Clamped to prevent OOM on budget devices
     private val recognizer = TextRecognition.getClient(TextRecognizerOptions.DEFAULT_OPTIONS)
+
+    private suspend fun processImageAsync(inputImage: InputImage): String =
+        suspendCancellableCoroutine { continuation ->
+            recognizer.process(inputImage)
+                .addOnSuccessListener { result ->
+                    continuation.resume(result.text)
+                }
+                .addOnFailureListener { e ->
+                    continuation.resumeWithException(e)
+                }
+        }
 
     /**
      * Runs OCR on a list of image Uris (e.g. returned by GmsDocumentScanner).
@@ -27,13 +40,12 @@ object OcrTextExtractor {
         for ((index, uri) in imageUris.withIndex()) {
             try {
                 val inputImage = InputImage.fromFilePath(context, uri)
-                val result = Tasks.await(recognizer.process(inputImage))
+                val text = processImageAsync(inputImage)
                 stringBuilder.append("--- PAGE ${index + 1} ---\n")
-
-                stringBuilder.append(result.text)
+                stringBuilder.append(text)
                 stringBuilder.append("\n\n")
             } catch (e: Exception) {
-                Log.e("OcrTextExtractor", "OCR failed on image page $index: ${e.message}")
+                LocalErrorLogger.record(context, TAG, "OCR failed on image page $index: ${e.message}", e)
             }
         }
         return@withContext stringBuilder.toString()
@@ -41,7 +53,7 @@ object OcrTextExtractor {
 
     /**
      * Extracts text from a PDF file using PdfRenderer to render pages into bitmaps,
-     * then processes each page bitmap via ML Kit Text Recognition.
+     * then processes each page bitmap via ML Kit Text Recognition with memory-safe dimensions.
      */
     suspend fun extractTextFromPdf(context: Context, pdfUri: Uri): String = withContext(Dispatchers.Default) {
         val stringBuilder = StringBuilder()
@@ -49,53 +61,44 @@ object OcrTextExtractor {
         var pdfRenderer: PdfRenderer? = null
 
         try {
-            // Open the PDF using content resolver
             parcelFileDescriptor = context.contentResolver.openFileDescriptor(pdfUri, "r")
             if (parcelFileDescriptor != null) {
                 pdfRenderer = PdfRenderer(parcelFileDescriptor)
                 val pageCount = pdfRenderer.pageCount
-                
-                // Cap pages for free tier (up to 5 pages), handled here as a default constraint
-                // Let's implement this check. If they are pro we parse everything,
-                // if they are free we only parse up to 5 pages as specified in Section 8!
-                // Wait, we can pass isPro to this method or let the ViewModel handle the limit.
-                // Let's parse everything in the extractor, and let the caller restrict the string or handle page bounds!
-                // That keeps the extractor clean and generic.
-                
+
                 for (i in 0 until pageCount) {
                     val page = pdfRenderer.openPage(i)
-                    
-                    // Create a high-res bitmap of the page
-                    val scale = 2f // Render at 2x resolution for high accuracy text recognition
-                    val width = (page.width * scale).toInt()
-                    val height = (page.height * scale).toInt()
+
+                    // Safe dimension calculation clamped to MAX_RENDER_DIMENSION to prevent OOM
+                    val maxSide = maxOf(page.width, page.height).toFloat()
+                    val scale = if (maxSide > 0) minOf(2f, MAX_RENDER_DIMENSION / maxSide) else 1f
+                    val width = (page.width * scale).toInt().coerceAtLeast(1)
+                    val height = (page.height * scale).toInt().coerceAtLeast(1)
+
                     val bitmap = Bitmap.createBitmap(width, height, Bitmap.Config.ARGB_8888)
-                    
-                    // Render PDF page into bitmap
                     page.render(bitmap, null, null, PdfRenderer.Page.RENDER_MODE_FOR_DISPLAY)
                     page.close()
 
-                    // OCR on the generated page bitmap
-                    val inputImage = InputImage.fromBitmap(bitmap, 0)
-                    val result = Tasks.await(recognizer.process(inputImage))
-                    
-                    stringBuilder.append("--- PAGE ${i + 1} ---\n")
-                    stringBuilder.append(result.text)
-                    stringBuilder.append("\n\n")
-                    
-                    // Recycle bitmap to free memory on budget devices
-                    bitmap.recycle()
+                    try {
+                        val inputImage = InputImage.fromBitmap(bitmap, 0)
+                        val text = processImageAsync(inputImage)
+                        stringBuilder.append("--- PAGE ${i + 1} ---\n")
+                        stringBuilder.append(text)
+                        stringBuilder.append("\n\n")
+                    } finally {
+                        bitmap.recycle() // Promptly recycle to free native graphic memory
+                    }
                 }
             }
         } catch (e: Exception) {
-            Log.e("OcrTextExtractor", "OCR failed on PDF: ${e.message}")
+            LocalErrorLogger.record(context, TAG, "OCR failed on PDF: ${e.message}", e)
             throw e
         } finally {
             try {
                 pdfRenderer?.close()
                 parcelFileDescriptor?.close()
             } catch (e: Exception) {
-                Log.e("OcrTextExtractor", "Error closing renderer: ${e.message}")
+                LocalErrorLogger.record(context, TAG, "Error closing PDF renderer: ${e.message}", e)
             }
         }
 
