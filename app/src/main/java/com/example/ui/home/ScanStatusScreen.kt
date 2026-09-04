@@ -43,6 +43,7 @@ fun ScanStatusScreen(message: String) {
 
 @Composable
 fun ScanErrorScreen(message: String, onReset: () -> Unit) {
+    val colors = LocalLGColors.current
     Column(
         modifier = Modifier.fillMaxSize(),
         horizontalAlignment = Alignment.CenterHorizontally,
@@ -51,9 +52,9 @@ fun ScanErrorScreen(message: String, onReset: () -> Unit) {
         AnimatedVisibility(visible = true, enter = fadeIn() + expandVertically()) {
             ElevatedCard(
                 modifier = Modifier.fillMaxWidth(),
-                shape = RoundedCornerShape(16.dp),
+                shape = RoundedCornerShape(24.dp),
                 colors = CardDefaults.elevatedCardColors(
-                    containerColor = MaterialTheme.colorScheme.errorContainer
+                    containerColor = colors.BannerDangerBackground
                 ),
                 elevation = CardDefaults.elevatedCardElevation(defaultElevation = 4.dp)
             ) {
@@ -64,15 +65,14 @@ fun ScanErrorScreen(message: String, onReset: () -> Unit) {
                     Icon(
                         imageVector = Icons.Filled.Warning,
                         contentDescription = "Error",
-                        tint = MaterialTheme.colorScheme.error,
+                        tint = colors.AccentDanger,
                         modifier = Modifier.size(48.dp)
                     )
                     Spacer(modifier = Modifier.height(16.dp))
                     Text(
                         text = message,
-                        style = MaterialTheme.typography.bodyMedium,
-                        fontWeight = FontWeight.Medium,
-                        color = MaterialTheme.colorScheme.onErrorContainer,
+                        style = LGType.Body.copy(fontWeight = FontWeight.Medium),
+                        color = colors.BannerDangerContent,
                         textAlign = TextAlign.Center
                     )
                     Spacer(modifier = Modifier.height(24.dp))

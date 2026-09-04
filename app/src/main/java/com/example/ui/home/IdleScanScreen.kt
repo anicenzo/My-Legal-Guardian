@@ -55,20 +55,47 @@ fun IdleScanScreen(
                 horizontalAlignment = Alignment.CenterHorizontally,
                 modifier = Modifier.padding(32.dp)
             ) {
-                // Hero Scan Icon (Flat solid PrimaryAccent)
+                // Hero Graphic — Flat Document Icon (Navy + Scanner Blue)
                 Box(
                     modifier = Modifier
-                        .size(80.dp)
-                        .clip(RoundedCornerShape(20.dp))
-                        .background(colors.PrimaryAccent),
+                        .size(100.dp),
                     contentAlignment = Alignment.Center
                 ) {
-                    Icon(
-                        imageVector = Icons.Filled.DocumentScanner,
-                        contentDescription = "Scan",
-                        tint = Color.White,
-                        modifier = Modifier.size(40.dp)
-                    )
+                    // Background document body: Deep Navy rounded rect
+                    Box(
+                        modifier = Modifier
+                            .size(76.dp, 88.dp)
+                            .clip(RoundedCornerShape(14.dp))
+                            .background(colors.TrustBlue),
+                        contentAlignment = Alignment.Center
+                    ) {
+                        // Document lines (white) to suggest text content
+                        Column(
+                            modifier = Modifier.padding(start = 12.dp, end = 8.dp, top = 16.dp, bottom = 8.dp),
+                            verticalArrangement = androidx.compose.foundation.layout.Arrangement.spacedBy(6.dp)
+                        ) {
+                            Box(Modifier.size(width = 38.dp, height = 3.dp).clip(RoundedCornerShape(2.dp)).background(Color.White.copy(alpha = 0.6f)))
+                            Box(Modifier.size(width = 30.dp, height = 3.dp).clip(RoundedCornerShape(2.dp)).background(Color.White.copy(alpha = 0.4f)))
+                            Box(Modifier.size(width = 34.dp, height = 3.dp).clip(RoundedCornerShape(2.dp)).background(Color.White.copy(alpha = 0.4f)))
+                            Box(Modifier.size(width = 26.dp, height = 3.dp).clip(RoundedCornerShape(2.dp)).background(Color.White.copy(alpha = 0.3f)))
+                        }
+                    }
+                    // Scanner Blue accent tab in top-right corner (scan badge)
+                    Box(
+                        modifier = Modifier
+                            .size(32.dp)
+                            .align(Alignment.TopEnd)
+                            .clip(RoundedCornerShape(bottomStart = 12.dp, topEnd = 14.dp))
+                            .background(colors.PrimaryAccent),
+                        contentAlignment = Alignment.Center
+                    ) {
+                        Icon(
+                            imageVector = Icons.Filled.DocumentScanner,
+                            contentDescription = null,
+                            tint = Color.White,
+                            modifier = Modifier.size(18.dp)
+                        )
+                    }
                 }
 
                 Spacer(modifier = Modifier.height(20.dp))

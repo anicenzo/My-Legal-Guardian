@@ -133,14 +133,14 @@ fun StudioFooter() {
 fun SectionHeader(title: String, color: Color) {
     Text(
         text = title,
-        style = MaterialTheme.typography.titleMedium,
-        fontWeight = FontWeight.Bold,
+        style = LGType.Title.copy(fontWeight = FontWeight.Bold),
         color = color
     )
 }
 
 @Composable
 fun CostRow(label: String, value: String) {
+    val colors = LocalLGColors.current
     Row(
         modifier = Modifier
             .fillMaxWidth()
@@ -149,14 +149,13 @@ fun CostRow(label: String, value: String) {
     ) {
         Text(
             text = label,
-            style = MaterialTheme.typography.bodyMedium,
-            color = MaterialTheme.colorScheme.onSurfaceVariant
+            style = LGType.Body.copy(fontWeight = FontWeight.Medium),
+            color = colors.TextSecondary
         )
         Text(
             text = value,
-            style = MaterialTheme.typography.bodyMedium,
-            fontWeight = FontWeight.SemiBold,
-            color = MaterialTheme.colorScheme.onSurface
+            style = LGType.Body.copy(fontWeight = FontWeight.SemiBold),
+            color = colors.TextPrimary
         )
     }
 }
