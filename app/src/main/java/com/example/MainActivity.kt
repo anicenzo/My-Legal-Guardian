@@ -1,7 +1,6 @@
 package com.example
 
 import android.os.Bundle
-import androidx.activity.ComponentActivity
 import androidx.activity.compose.setContent
 import androidx.activity.enableEdgeToEdge
 import androidx.compose.foundation.background
@@ -39,7 +38,7 @@ class MainActivity : FragmentActivity() {
     override fun onCreate(savedInstanceState: Bundle?) {
         super.onCreate(savedInstanceState)
         enableEdgeToEdge()
-        
+
         scannerEngine = ScannerEngine(this)
         legalAuditEngine = LegalAuditEngine(this)
         val preferenceManager = com.example.data.PreferenceManager(applicationContext)
@@ -47,13 +46,13 @@ class MainActivity : FragmentActivity() {
         viewModel = ViewModelProvider(this, factory)[MainViewModel::class.java]
 
         setContent {
-            val isDarkMode by viewModel.isDarkMode.collectAsState()
+            // Dark-only: no isDarkMode state collection, no theme parameter
             val navController = rememberNavController()
             val navBackStackEntry by navController.currentBackStackEntryAsState()
             val currentRoute = navBackStackEntry?.destination?.route ?: "scan"
             var showPaywall by remember { mutableStateOf(false) }
 
-            MyLegalGuardianTheme(darkTheme = isDarkMode) {
+            MyLegalGuardianTheme {
                 val colors = LocalLGColors.current
 
                 if (showPaywall) {
@@ -93,19 +92,13 @@ class MainActivity : FragmentActivity() {
                             startDestination = "scan"
                         ) {
                             composable("scan") {
-                                HomeScreen(
-                                    viewModel = viewModel
-                                )
+                                HomeScreen(viewModel = viewModel)
                             }
                             composable("vault") {
                                 VaultScreen(
                                     viewModel = viewModel,
-                                    onOpenDocument = {
-                                        navController.navigate("scan")
-                                    },
-                                    onScanClick = {
-                                        navController.navigate("scan")
-                                    }
+                                    onOpenDocument = { navController.navigate("scan") },
+                                    onScanClick = { navController.navigate("scan") }
                                 )
                             }
                             composable("settings") {

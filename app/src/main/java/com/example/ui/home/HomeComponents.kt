@@ -3,12 +3,12 @@ package com.example.ui.home
 import androidx.compose.animation.core.Spring
 import androidx.compose.animation.core.animateFloatAsState
 import androidx.compose.animation.core.spring
+import androidx.compose.foundation.background
+import androidx.compose.foundation.border
 import androidx.compose.foundation.interaction.MutableInteractionSource
 import androidx.compose.foundation.interaction.collectIsPressedAsState
 import androidx.compose.foundation.layout.*
 import androidx.compose.foundation.shape.RoundedCornerShape
-import androidx.compose.material.icons.Icons
-import androidx.compose.material.icons.filled.Lock
 import androidx.compose.material3.*
 import androidx.compose.runtime.*
 import androidx.compose.ui.Alignment
@@ -19,11 +19,12 @@ import androidx.compose.ui.graphics.vector.ImageVector
 import androidx.compose.ui.text.font.FontWeight
 import androidx.compose.ui.text.style.TextAlign
 import androidx.compose.ui.unit.dp
-import androidx.compose.ui.unit.sp
+import com.example.ui.primitives.LGButton
 import com.example.ui.primitives.LGSpacing
 import com.example.ui.primitives.LGType
 import com.example.ui.primitives.LocalLGColors
 
+// ── AnimatedPrimaryButton — delegates to LGButton with press scale ─────────────
 @Composable
 fun AnimatedPrimaryButton(
     text: String,
@@ -31,135 +32,53 @@ fun AnimatedPrimaryButton(
     onClick: () -> Unit,
     modifier: Modifier = Modifier
 ) {
-    val colors = LocalLGColors.current
-    val interactionSource = remember { MutableInteractionSource() }
-    val isPressed by interactionSource.collectIsPressedAsState()
-    val scale by animateFloatAsState(
-        targetValue = if (isPressed) 0.97f else 1f,
-        animationSpec = spring(
-            dampingRatio = Spring.DampingRatioMediumBouncy,
-            stiffness = Spring.StiffnessLow
-        ),
-        label = "ButtonScale"
-    )
-
-    Button(
+    LGButton(
+        text = text,
         onClick = onClick,
-        modifier = modifier
-            .fillMaxWidth()
-            .defaultMinSize(minHeight = 56.dp)
-            .height(56.dp)
-            .scale(scale),
-        shape = RoundedCornerShape(12.dp),
-        colors = ButtonDefaults.elevatedButtonColors(
-            containerColor = colors.PrimaryAccent,
-            contentColor = Color.White
-        ),
-        interactionSource = interactionSource,
-        elevation = ButtonDefaults.buttonElevation(
-            defaultElevation = 3.dp,
-            pressedElevation = 1.dp,
-            hoveredElevation = 5.dp
-        )
-    ) {
-        if (icon != null) {
-            Icon(
-                imageVector = icon,
-                contentDescription = null,
-                tint = Color.White,
-                modifier = Modifier.size(20.dp)
-            )
-            Spacer(modifier = Modifier.width(LGSpacing.sm))
-        }
-        Text(
-            text = text,
-            style = LGType.Title.copy(
-                fontWeight = FontWeight.Bold,
-                fontSize = 16.sp,
-                color = Color.White
-            )
-        )
-    }
-}
-
-@Composable
-fun PrivacyBanner() {
-    val colors = LocalLGColors.current
-
-    Surface(
-        color = colors.BannerSafeBackground,
-        shape = RoundedCornerShape(20.dp),
-        modifier = Modifier.fillMaxWidth()
-    ) {
-        Row(
-            modifier = Modifier.padding(horizontal = LGSpacing.lg, vertical = 14.dp),
-            verticalAlignment = Alignment.CenterVertically,
-            horizontalArrangement = Arrangement.Center
-        ) {
-            Icon(
-                imageVector = Icons.Filled.Lock,
-                contentDescription = "Secure",
-                tint = colors.BannerSafeContent,
-                modifier = Modifier.size(18.dp)
-            )
-            Spacer(modifier = Modifier.width(LGSpacing.sm))
-            Text(
-                text = "100% Offline & Secure. Your data never leaves your device.",
-                style = LGType.BodySmall.copy(
-                    fontWeight = FontWeight.Medium,
-                    color = colors.BannerSafeContent
-                )
-            )
-        }
-    }
-}
-
-@Composable
-fun StudioFooter() {
-    Text(
-        text = "Powered by Anixium Studios",
-        style = LGType.Caption.copy(
-            color = LocalLGColors.current.TextSecondary,
-            fontWeight = FontWeight.Medium
-        ),
-        modifier = Modifier
-            .fillMaxWidth()
-            .padding(vertical = LGSpacing.lg),
-        textAlign = TextAlign.Center
+        modifier = modifier.fillMaxWidth().height(52.dp)
     )
 }
 
+// ── Section Header ─────────────────────────────────────────────────────────────
 @Composable
 fun SectionHeader(title: String, color: Color) {
     Text(
         text = title,
-        style = LGType.Title.copy(fontWeight = FontWeight.Bold),
+        style = LGType.Heading.copy(fontWeight = FontWeight.SemiBold),
         color = color
     )
 }
 
+// ── Cost Row ───────────────────────────────────────────────────────────────────
 @Composable
 fun CostRow(label: String, value: String) {
     val colors = LocalLGColors.current
     Row(
-        modifier = Modifier
-            .fillMaxWidth()
-            .padding(vertical = 4.dp),
+        modifier = Modifier.fillMaxWidth().padding(vertical = 4.dp),
         horizontalArrangement = Arrangement.SpaceBetween
     ) {
-        Text(
-            text = label,
-            style = LGType.Body.copy(fontWeight = FontWeight.Medium),
-            color = colors.TextSecondary
-        )
-        Text(
-            text = value,
-            style = LGType.Body.copy(fontWeight = FontWeight.SemiBold),
-            color = colors.TextPrimary
-        )
+        Text(label, style = LGType.Body.copy(fontWeight = FontWeight.Normal), color = colors.TextSecondary)
+        Text(value, style = LGType.Body.copy(fontWeight = FontWeight.Medium), color = colors.TextPrimary)
     }
 }
 
-fun formatAmount(amount: Double): String {
-    return String.format("%,.2f", amount)
+// ── StudioFooter — kept as composable but only used in Settings ───────────────
+@Composable
+fun StudioFooter() {
+    Text(
+        text = "Legal AI — Contract Scanner",
+        style = LGType.Caption.copy(color = LocalLGColors.current.TextTertiary),
+        modifier = Modifier.fillMaxWidth().padding(vertical = LGSpacing.lg),
+        textAlign = TextAlign.Center
+    )
 }
+
+// ── PrivacyBanner — stub kept for call-site compat; renders nothing ────────────
+// Trust is stated once, in Settings → Privacy & Security.
+@Composable
+fun PrivacyBanner() {
+    // Intentionally empty — removed from Scan and Result screens per redesign brief.
+    // Trust copy lives in Settings only.
+}
+
+fun formatAmount(amount: Double): String = String.format("%,.2f", amount)

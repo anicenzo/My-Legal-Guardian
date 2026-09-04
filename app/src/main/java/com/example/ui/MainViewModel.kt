@@ -74,6 +74,9 @@ class MainViewModel(
     val uiState: StateFlow<AuditState> = _uiState.asStateFlow()
     val auditState: StateFlow<AuditState> = _uiState.asStateFlow() // Backwards-compatible alias
 
+    // Deprecated: app is now dark-only. Kept as a stub to prevent compilation errors.
+    // Remove after confirming all call-sites are cleaned up.
+    @Deprecated("App is dark-only. isDarkMode always returns false. Remove usages.")
     val isDarkMode: StateFlow<Boolean> = preferenceManager.isDarkMode.stateIn(
         scope = viewModelScope,
         started = SharingStarted.WhileSubscribed(5000),
@@ -206,10 +209,10 @@ class MainViewModel(
         })
     }
 
+    // No-op stub: app is dark-only, theme toggling is removed.
+    @Deprecated("App is dark-only. toggleTheme() is a no-op. Remove usages.")
     fun toggleTheme() {
-        viewModelScope.launch {
-            preferenceManager.setDarkMode(!isDarkMode.value)
-        }
+        // Intentionally empty — dark-only app, no theme switching.
     }
 
     fun getScannerClient() = scannerEngine.getScannerClient()

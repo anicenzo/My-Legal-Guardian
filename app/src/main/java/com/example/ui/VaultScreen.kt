@@ -1,12 +1,12 @@
 package com.example.ui
 
 import androidx.compose.animation.*
+import androidx.compose.foundation.BorderStroke
 import androidx.compose.foundation.background
-import androidx.compose.foundation.clickable
+import androidx.compose.foundation.border
 import androidx.compose.foundation.layout.*
 import androidx.compose.foundation.lazy.LazyColumn
 import androidx.compose.foundation.lazy.items
-import androidx.compose.foundation.shape.CircleShape
 import androidx.compose.foundation.shape.RoundedCornerShape
 import androidx.compose.material.icons.Icons
 import androidx.compose.material.icons.filled.*
@@ -16,20 +16,23 @@ import androidx.compose.ui.Alignment
 import androidx.compose.ui.Modifier
 import androidx.compose.ui.draw.clip
 import androidx.compose.ui.graphics.Color
-import androidx.compose.ui.text.font.FontFamily
 import androidx.compose.ui.text.font.FontWeight
 import androidx.compose.ui.text.style.TextOverflow
 import androidx.compose.ui.unit.dp
 import androidx.compose.ui.unit.sp
 import com.example.data.db.DocumentEntity
-import com.example.ui.primitives.LGColorsDark
-import com.example.ui.primitives.LGColorsLight
+import com.example.ui.primitives.LGButton
+import com.example.ui.primitives.LGSpacing
 import com.example.ui.primitives.LGType
 import com.example.ui.primitives.LocalLGColors
 import com.example.ui.primitives.lgPressClickable
 import java.text.SimpleDateFormat
 import java.util.Date
 import java.util.Locale
+
+// ═══════════════════════════════════════════════════════════════════════════════
+// Legal AI — Vault Screen (dark-only, flat cards, no theme toggle)
+// ═══════════════════════════════════════════════════════════════════════════════
 
 @Composable
 fun VaultScreen(
@@ -50,13 +53,8 @@ fun VaultScreen(
                 activity = activity,
                 title = "Unlock Vault",
                 subtitle = "Authenticate to access confidential contracts",
-                onSuccess = {
-                    isUnlocked = true
-                    authError = null
-                },
-                onError = { err ->
-                    authError = err
-                }
+                onSuccess = { isUnlocked = true; authError = null },
+                onError = { err -> authError = err }
             )
         } else {
             isUnlocked = true
@@ -64,16 +62,13 @@ fun VaultScreen(
     }
 
     LaunchedEffect(isBiometricEnabled) {
-        if (isBiometricEnabled && !isUnlocked) {
-            triggerAuth()
-        }
+        if (isBiometricEnabled && !isUnlocked) triggerAuth()
     }
 
-    val isDarkMode by viewModel.isDarkMode.collectAsState()
     val savedDocs by viewModel.savedDocuments.collectAsState(initial = emptyList())
     val colors = LocalLGColors.current
-    val isDark = colors == LGColorsDark
 
+    // ── Locked state ──────────────────────────────────────────────────────────
     if (isBiometricEnabled && !isUnlocked) {
         Column(
             modifier = modifier
@@ -85,28 +80,25 @@ fun VaultScreen(
         ) {
             Box(
                 modifier = Modifier
-                    .size(72.dp)
-                    .clip(RoundedCornerShape(20.dp))
-                    .background(colors.PrimaryAccent),
+                    .size(64.dp)
+                    .clip(RoundedCornerShape(16.dp))
+                    .background(colors.Accent.copy(alpha = 0.12f))
+                    .border(BorderStroke(1.dp, colors.Accent.copy(alpha = 0.3f)), RoundedCornerShape(16.dp)),
                 contentAlignment = Alignment.Center
             ) {
                 Icon(
                     imageVector = Icons.Filled.Lock,
                     contentDescription = "Locked",
-                    tint = Color.White,
-                    modifier = Modifier.size(36.dp)
+                    tint = colors.Accent,
+                    modifier = Modifier.size(30.dp)
                 )
             }
             Spacer(modifier = Modifier.height(24.dp))
-            Text(
-                text = "Vault Locked",
-                style = LGType.Headline,
-                color = colors.TextPrimary
-            )
-            Spacer(modifier = Modifier.height(8.dp))
+            Text("Vault Locked", style = LGType.Title, color = colors.TextPrimary)
+            Spacer(modifier = Modifier.height(6.dp))
             Text(
                 text = "Biometric protection is enabled for your confidential contract history.",
-                style = LGType.BodySmall,
+                style = LGType.Body,
                 color = colors.TextSecondary,
                 textAlign = androidx.compose.ui.text.style.TextAlign.Center
             )
@@ -115,185 +107,96 @@ fun VaultScreen(
                 Text(
                     text = authError ?: "",
                     style = LGType.Caption,
-                    color = colors.AccentDanger,
+                    color = colors.RiskHigh,   // AccentDanger → RiskHigh
                     textAlign = androidx.compose.ui.text.style.TextAlign.Center
                 )
             }
             Spacer(modifier = Modifier.height(28.dp))
-            Button(
+            LGButton(
+                text = "Unlock Vault",
                 onClick = { triggerAuth() },
-                modifier = Modifier
-                    .fillMaxWidth()
-                    .height(56.dp),
-                shape = RoundedCornerShape(12.dp),
-                colors = ButtonDefaults.elevatedButtonColors(
-                    containerColor = colors.PrimaryAccent,
-                    contentColor = Color.White
-                )
-            ) {
-                Icon(Icons.Filled.Fingerprint, contentDescription = null, tint = Color.White)
-                Spacer(modifier = Modifier.width(8.dp))
-                Text("Unlock Vault", style = LGType.Button, color = Color.White)
-            }
+                modifier = Modifier.fillMaxWidth()
+            )
         }
         return
     }
 
+    // ── Unlocked vault ────────────────────────────────────────────────────────
     Column(
         modifier = modifier
             .fillMaxSize()
             .background(colors.Background)
     ) {
-        // ── Top App Bar ──────────────────────────────────────────────────────
-        Surface(
-            color = colors.HeaderBackground,
-            modifier = Modifier.fillMaxWidth(),
-            shadowElevation = 4.dp
-        ) {
+        // Flat top bar — hairline border, no shadow, no theme toggle
+        Column(modifier = Modifier.fillMaxWidth().background(colors.Background)) {
             Row(
                 modifier = Modifier
+                    .fillMaxWidth()
                     .statusBarsPadding()
-                    .padding(horizontal = com.example.ui.primitives.LGSpacing.lg, vertical = com.example.ui.primitives.LGSpacing.md),
+                    .height(56.dp)
+                    .padding(horizontal = 20.dp),
                 verticalAlignment = Alignment.CenterVertically
             ) {
-                Icon(
-                    imageVector = Icons.Filled.FolderSpecial,
-                    contentDescription = "Vault",
-                    tint = colors.HeaderContent,
-                    modifier = Modifier.size(26.dp)
-                )
-                Spacer(modifier = Modifier.width(com.example.ui.primitives.LGSpacing.sm))
-                Column {
-                    Text(
-                        text = "Encrypted Vault",
-                        style = LGType.Title.copy(
-                            fontWeight = FontWeight.Bold,
-                            color = colors.HeaderContent
-                        )
-                    )
-                    Text(
-                        text = "100% On-Device Local History",
-                        style = LGType.Caption.copy(
-                            color = colors.HeaderContent.copy(alpha = 0.8f)
-                        )
-                    )
-                }
-                Spacer(modifier = Modifier.weight(1f))
-                Box(
-                    modifier = Modifier
-                        .size(36.dp)
-                        .clip(CircleShape)
-                        .background(colors.HeaderContent.copy(alpha = 0.12f))
-                        .clickable { viewModel.toggleTheme() },
-                    contentAlignment = Alignment.Center
-                ) {
-                    Icon(
-                        imageVector = if (isDarkMode) Icons.Filled.LightMode else Icons.Filled.DarkMode,
-                        contentDescription = "Theme Toggle",
-                        tint = colors.HeaderContent,
-                        modifier = Modifier.size(20.dp)
-                    )
-                }
+                Text("Vault", style = LGType.Title.copy(color = colors.TextPrimary), modifier = Modifier.weight(1f))
             }
+            Box(modifier = Modifier.fillMaxWidth().height(1.dp).background(colors.Border))
         }
 
-        // ── Main Content ─────────────────────────────────────────────────────
+        // ── Main Content ──────────────────────────────────────────────────────
         if (savedDocs.isEmpty()) {
-            // Empty Vault State
+            // Empty state
             Box(
-                modifier = Modifier
-                    .fillMaxSize()
-                    .padding(24.dp),
+                modifier = Modifier.fillMaxSize().padding(24.dp),
                 contentAlignment = Alignment.Center
             ) {
-                ElevatedCard(
-                    modifier = Modifier.fillMaxWidth(),
-                    shape = RoundedCornerShape(24.dp),
-                    colors = CardDefaults.elevatedCardColors(
-                        containerColor = colors.Surface
-                    ),
-                    elevation = CardDefaults.elevatedCardElevation(defaultElevation = 2.dp)
+                Column(
+                    modifier = Modifier
+                        .fillMaxWidth()
+                        .background(colors.Surface, RoundedCornerShape(12.dp))
+                        .border(BorderStroke(1.dp, colors.Border), RoundedCornerShape(12.dp))
+                        .padding(32.dp),
+                    horizontalAlignment = Alignment.CenterHorizontally
                 ) {
-                    Column(
-                        modifier = Modifier.padding(32.dp),
-                        horizontalAlignment = Alignment.CenterHorizontally
+                    Box(
+                        modifier = Modifier
+                            .size(56.dp)
+                            .clip(RoundedCornerShape(14.dp))
+                            .background(colors.Border),
+                        contentAlignment = Alignment.Center
                     ) {
-                        Box(
-                            modifier = Modifier
-                                .size(72.dp)
-                                .clip(RoundedCornerShape(20.dp))
-                                .background(colors.PrimaryAccent),
-                            contentAlignment = Alignment.Center
-                        ) {
-                            Icon(
-                                imageVector = Icons.Filled.FolderOpen,
-                                contentDescription = null,
-                                tint = Color.White,
-                                modifier = Modifier.size(36.dp)
-                            )
-                        }
-                        Spacer(modifier = Modifier.height(16.dp))
-                        Text(
-                            text = "Vault is Empty",
-                            style = LGType.Title.copy(fontWeight = FontWeight.Bold),
-                            color = colors.TextPrimary
+                        Icon(
+                            imageVector = Icons.Filled.FolderOpen,
+                            contentDescription = null,
+                            tint = colors.TextTertiary,
+                            modifier = Modifier.size(28.dp)
                         )
-                        Spacer(modifier = Modifier.height(8.dp))
-                        Text(
-                            text = "Audited contracts are securely saved here offline for easy reference and renegotiation.",
-                            style = LGType.BodySmall,
-                            color = colors.TextSecondary,
-                            textAlign = androidx.compose.ui.text.style.TextAlign.Center
-                        )
-                        Spacer(modifier = Modifier.height(24.dp))
-                        Button(
-                            onClick = onScanClick,
-                            modifier = Modifier
-                                .fillMaxWidth()
-                                .defaultMinSize(minHeight = 56.dp)
-                                .height(56.dp),
-                            shape = RoundedCornerShape(12.dp),
-                            colors = ButtonDefaults.elevatedButtonColors(
-                                containerColor = colors.PrimaryAccent,
-                                contentColor = Color.White
-                            ),
-                            elevation = ButtonDefaults.buttonElevation(
-                                defaultElevation = 3.dp,
-                                pressedElevation = 1.dp
-                            )
-                        ) {
-                            Icon(imageVector = Icons.Filled.Add, contentDescription = null, tint = Color.White)
-                            Spacer(modifier = Modifier.width(8.dp))
-                            Text(
-                                text = "Scan New Contract",
-                                style = LGType.Title.copy(
-                                    fontSize = 15.sp,
-                                    fontWeight = FontWeight.SemiBold,
-                                    color = Color.White
-                                )
-                            )
-                        }
                     }
+                    Spacer(modifier = Modifier.height(16.dp))
+                    Text("Vault is Empty", style = LGType.Heading.copy(fontWeight = FontWeight.SemiBold), color = colors.TextPrimary)
+                    Spacer(modifier = Modifier.height(6.dp))
+                    Text(
+                        text = "Audited contracts are securely saved here offline for easy reference.",
+                        style = LGType.Body,
+                        color = colors.TextSecondary,
+                        textAlign = androidx.compose.ui.text.style.TextAlign.Center
+                    )
+                    Spacer(modifier = Modifier.height(24.dp))
+                    LGButton(text = "Scan New Contract", onClick = onScanClick, modifier = Modifier.fillMaxWidth())
                 }
             }
         } else {
-            // Document List
+            // Document list
             LazyColumn(
-                modifier = Modifier
-                    .fillMaxSize()
-                    .padding(horizontal = 20.dp),
+                modifier = Modifier.fillMaxSize().padding(horizontal = 20.dp),
                 contentPadding = PaddingValues(top = 16.dp, bottom = 80.dp),
-                verticalArrangement = Arrangement.spacedBy(14.dp)
+                verticalArrangement = Arrangement.spacedBy(10.dp)
             ) {
                 item {
                     Text(
-                        text = "PAST AUDITS (${savedDocs.size})",
-                        style = LGType.Label.copy(
-                            color = colors.TextSecondary,
-                            fontWeight = FontWeight.SemiBold,
-                            letterSpacing = 1.2.sp
-                        ),
-                        modifier = Modifier.padding(start = 4.dp, bottom = 4.dp)
+                        text = "PAST AUDITS  ·  ${savedDocs.size}",
+                        style = LGType.Caption.copy(fontWeight = FontWeight.Medium, letterSpacing = 1.2.sp),
+                        color = colors.TextTertiary,
+                        modifier = Modifier.padding(start = 2.dp, bottom = 4.dp)
                     )
                 }
 
@@ -304,9 +207,7 @@ fun VaultScreen(
                             viewModel.loadSavedDocument(doc.id)
                             onOpenDocument()
                         },
-                        onDelete = {
-                            viewModel.deleteSavedDocument(doc.id)
-                        }
+                        onDelete = { viewModel.deleteSavedDocument(doc.id) }
                     )
                 }
             }
@@ -322,80 +223,58 @@ fun VaultDocumentCard(
 ) {
     val colors = LocalLGColors.current
     val dateFormat = remember { SimpleDateFormat("MMM dd, yyyy · HH:mm", Locale.getDefault()) }
-    val formattedDate = remember(document.dateScanned) {
-        dateFormat.format(Date(document.dateScanned))
-    }
+    val formattedDate = remember(document.dateScanned) { dateFormat.format(Date(document.dateScanned)) }
 
-    ElevatedCard(
+    // Flat card — border replaces elevation
+    Row(
         modifier = Modifier
             .fillMaxWidth()
-            .lgPressClickable(onClick = onClick),
-        shape = RoundedCornerShape(24.dp),
-        colors = CardDefaults.elevatedCardColors(
-            containerColor = colors.Surface
-        ),
-        elevation = CardDefaults.elevatedCardElevation(defaultElevation = 2.dp)
+            .background(colors.Surface, RoundedCornerShape(12.dp))
+            .border(BorderStroke(1.dp, colors.Border), RoundedCornerShape(12.dp))
+            .lgPressClickable(onClick = onClick)
+            .padding(16.dp),
+        verticalAlignment = Alignment.CenterVertically
     ) {
-        Row(
+        Box(
             modifier = Modifier
-                .fillMaxWidth()
-                .padding(20.dp),
-            verticalAlignment = Alignment.CenterVertically
+                .size(44.dp)
+                .clip(RoundedCornerShape(10.dp))
+                .background(colors.SurfaceElevated)
+                .border(BorderStroke(1.dp, colors.Border), RoundedCornerShape(10.dp)),
+            contentAlignment = Alignment.Center
         ) {
-            Box(
-                modifier = Modifier
-                    .size(48.dp)
-                    .clip(RoundedCornerShape(16.dp))
-                    .background(colors.Border.copy(alpha = 0.5f)),
-                contentAlignment = Alignment.Center
-            ) {
-                Icon(
-                    imageVector = Icons.Filled.Description,
-                    contentDescription = null,
-                    tint = colors.TextPrimary,
-                    modifier = Modifier.size(24.dp)
-                )
-            }
+            Icon(
+                imageVector = Icons.Filled.Description,
+                contentDescription = null,
+                tint = colors.TextSecondary,
+                modifier = Modifier.size(22.dp)
+            )
+        }
 
-            Spacer(modifier = Modifier.width(16.dp))
+        Spacer(modifier = Modifier.width(14.dp))
 
-            Column(modifier = Modifier.weight(1f)) {
-                Text(
-                    text = document.title,
-                    style = LGType.Body.copy(fontWeight = FontWeight.SemiBold),
-                    color = colors.TextPrimary,
-                    maxLines = 1,
-                    overflow = TextOverflow.Ellipsis
-                )
-                Spacer(modifier = Modifier.height(4.dp))
-                Row(verticalAlignment = Alignment.CenterVertically) {
-                    Text(
-                        text = formattedDate,
-                        style = LGType.Caption,
-                        color = colors.TextSecondary
-                    )
-                    Spacer(modifier = Modifier.width(8.dp))
-                    Text(
-                        text = "•",
-                        style = LGType.Caption,
-                        color = colors.TextSecondary
-                    )
-                    Spacer(modifier = Modifier.width(8.dp))
-                    Text(
-                        text = "${document.pageCount} ${if (document.pageCount == 1) "page" else "pages"}",
-                        style = LGType.Caption,
-                        color = colors.TextSecondary
-                    )
-                }
-            }
+        Column(modifier = Modifier.weight(1f)) {
+            Text(
+                text = document.title,
+                style = LGType.Body.copy(fontWeight = FontWeight.Medium),
+                color = colors.TextPrimary,
+                maxLines = 1,
+                overflow = TextOverflow.Ellipsis
+            )
+            Spacer(modifier = Modifier.height(3.dp))
+            Text(
+                text = "$formattedDate  ·  ${document.pageCount} ${if (document.pageCount == 1) "page" else "pages"}",
+                style = LGType.Caption,
+                color = colors.TextTertiary
+            )
+        }
 
-            IconButton(onClick = onDelete) {
-                Icon(
-                    imageVector = Icons.Filled.DeleteOutline,
-                    contentDescription = "Delete Document",
-                    tint = colors.TextSecondary
-                )
-            }
+        IconButton(onClick = onDelete) {
+            Icon(
+                imageVector = Icons.Filled.DeleteOutline,
+                contentDescription = "Delete",
+                tint = colors.TextTertiary
+            )
         }
     }
 }

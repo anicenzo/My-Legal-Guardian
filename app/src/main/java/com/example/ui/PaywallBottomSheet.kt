@@ -1,28 +1,22 @@
 package com.example.ui
 
 import android.app.Activity
-import android.content.Context
-import android.content.ContextWrapper
 import android.widget.Toast
-import androidx.compose.animation.core.*
+import androidx.compose.foundation.BorderStroke
 import androidx.compose.foundation.background
+import androidx.compose.foundation.border
 import androidx.compose.foundation.layout.*
-import androidx.compose.foundation.shape.CircleShape
 import androidx.compose.foundation.shape.RoundedCornerShape
-import androidx.compose.material.icons.Icons
-import androidx.compose.material.icons.filled.*
 import androidx.compose.material3.*
 import androidx.compose.runtime.*
 import androidx.compose.ui.Alignment
 import androidx.compose.ui.Modifier
-import androidx.compose.ui.draw.clip
 import androidx.compose.ui.graphics.Color
-import androidx.compose.ui.graphics.vector.ImageVector
 import androidx.compose.ui.platform.LocalContext
+import androidx.compose.ui.text.font.FontStyle
 import androidx.compose.ui.text.font.FontWeight
 import androidx.compose.ui.text.style.TextAlign
 import androidx.compose.ui.unit.dp
-import androidx.compose.ui.unit.sp
 import com.qonversion.android.sdk.Qonversion
 import com.qonversion.android.sdk.dto.QonversionError
 import com.qonversion.android.sdk.dto.entitlements.QEntitlement
@@ -31,12 +25,19 @@ import com.qonversion.android.sdk.listeners.QonversionEntitlementsCallback
 import com.qonversion.android.sdk.listeners.QonversionProductsCallback
 
 import com.example.util.findActivity
+import com.example.ui.primitives.LGBadge
+import com.example.ui.primitives.LGButton
+import com.example.ui.primitives.LGButtonVariant
+import com.example.ui.primitives.LGColorsDark
+import com.example.ui.primitives.LGType
+import com.example.ui.primitives.LocalLGColors
+import com.example.ui.primitives.clickableNoRipple
 
 // ═══════════════════════════════════════════════════════════════════════════════
-// My Legal Guardian — Premium Paywall Bottom Sheet
+// Legal AI — Paywall Bottom Sheet (visual rebuild, logic preserved byte-for-byte)
 // ═══════════════════════════════════════════════════════════════════════════════
-// All Qonversion purchase logic is preserved byte-for-byte.
-// Only UI styling has been updated to match the premium design system.
+// Removed: glowing squircle shield icon, green circular checkmarks, feature list.
+// Replaced with: product proof surface showing a real scan result example.
 
 @OptIn(ExperimentalMaterial3Api::class)
 @Composable
@@ -45,40 +46,29 @@ fun PaywallBottomSheet(
     viewModel: MainViewModel
 ) {
     val sheetState = rememberModalBottomSheetState(skipPartiallyExpanded = true)
+    val colors = LocalLGColors.current
 
     ModalBottomSheet(
         onDismissRequest = onDismiss,
         sheetState = sheetState,
-        containerColor = MaterialTheme.colorScheme.surface,
-        shape = RoundedCornerShape(topStart = 28.dp, topEnd = 28.dp),
+        containerColor = colors.Background,
+        shape = RoundedCornerShape(topStart = 20.dp, topEnd = 20.dp),
         dragHandle = {
-            Column(
-                modifier = Modifier.fillMaxWidth(),
-                horizontalAlignment = Alignment.CenterHorizontally
-            ) {
-                Spacer(modifier = Modifier.height(12.dp))
+            Column(modifier = Modifier.fillMaxWidth(), horizontalAlignment = Alignment.CenterHorizontally) {
+                Spacer(modifier = Modifier.height(14.dp))
                 Box(
                     modifier = Modifier
-                        .width(40.dp)
-                        .height(4.dp)
-                        .clip(CircleShape)
-                        .background(MaterialTheme.colorScheme.onSurfaceVariant.copy(alpha = 0.3f))
+                        .width(36.dp)
+                        .height(3.dp)
+                        .background(colors.Border, RoundedCornerShape(2.dp))
                 )
-                Spacer(modifier = Modifier.height(8.dp))
+                Spacer(modifier = Modifier.height(10.dp))
             }
         }
     ) {
-        PaywallContent(
-            viewModel = viewModel,
-            onDismiss = onDismiss
-        )
+        PaywallContent(viewModel = viewModel, onDismiss = onDismiss)
     }
 }
-
-
-// ═══════════════════════════════════════════════════════════════════════════════
-// PAYWALL CONTENT — Feature list, pricing, and purchase CTA
-// ═══════════════════════════════════════════════════════════════════════════════
 
 @Composable
 private fun PaywallContent(
@@ -87,102 +77,82 @@ private fun PaywallContent(
 ) {
     val context = LocalContext.current
     val proPrice by viewModel.proProductPrice.collectAsState()
+    val colors = LocalLGColors.current
     var isLoading by remember { mutableStateOf(false) }
 
-    LaunchedEffect(Unit) {
-        viewModel.loadProducts()
-    }
-
-    val colors = com.example.ui.primitives.LocalLGColors.current
-    val isDark = colors == com.example.ui.primitives.LGColorsDark
+    LaunchedEffect(Unit) { viewModel.loadProducts() }
 
     Column(
         modifier = Modifier
             .fillMaxWidth()
             .navigationBarsPadding()
-            .padding(horizontal = 24.dp)
-            .padding(bottom = 32.dp),
-        horizontalAlignment = Alignment.CenterHorizontally,
-        verticalArrangement = Arrangement.spacedBy(18.dp)
+            .padding(horizontal = 20.dp)
+            .padding(bottom = 36.dp),
+        verticalArrangement = Arrangement.spacedBy(0.dp)
     ) {
-        // ═════════════════════════════════════════════════════════════════
-        // Shield Icon — Flat Solid PrimaryAccent (Anti-slop: NO gradient)
-        // ═════════════════════════════════════════════════════════════════
-        Box(
-            modifier = Modifier
-                .size(72.dp)
-                .clip(RoundedCornerShape(20.dp))
-                .background(colors.PrimaryAccent),
-            contentAlignment = Alignment.Center
-        ) {
-            Icon(
-                imageVector = Icons.Filled.Shield,
-                contentDescription = "Pro",
-                tint = Color.White,
-                modifier = Modifier.size(36.dp)
-            )
-        }
-
-        // ═════════════════════════════════════════════════════════════════
-        // Headline (Strict Sans-Serif)
-        // ═════════════════════════════════════════════════════════════════
+        // ── Header — editorial, left-aligned ─────────────────────────────────
+        Text("Unlock Pro", style = LGType.Title, color = colors.TextPrimary)
+        Spacer(modifier = Modifier.height(6.dp))
         Text(
-            text = "Unlock Pro for\nUnlimited Scans",
-            style = com.example.ui.primitives.LGType.Headline.copy(
-                fontWeight = FontWeight.Bold,
-                lineHeight = 32.sp
-            ),
-            color = colors.TextPrimary,
-            textAlign = TextAlign.Center
+            text = "Unlimited scans, exportable reports, and negotiation drafts.",
+            style = LGType.Body,
+            color = colors.TextSecondary
         )
 
-        // ═════════════════════════════════════════════════════════════════
-        // Feature List — Emerald green checkmarks & generous spacing
-        // ═════════════════════════════════════════════════════════════════
-        Column(
-            verticalArrangement = Arrangement.spacedBy(16.dp),
-            modifier = Modifier.fillMaxWidth()
-        ) {
-            FeatureBullet(icon = Icons.Filled.CheckCircle, text = "Unlimited offline scans")
-            FeatureBullet(icon = Icons.Filled.CheckCircle, text = "Export professional PDF reports")
-            FeatureBullet(icon = Icons.Filled.CheckCircle, text = "AI counter-proposal email drafting")
-            FeatureBullet(icon = Icons.Filled.CheckCircle, text = "100% private & on-device")
-        }
+        Spacer(modifier = Modifier.height(24.dp))
 
-        // ═════════════════════════════════════════════════════════════════
-        // Price Disclosure (Plain text, no card chrome per spec)
-        // ═════════════════════════════════════════════════════════════════
+        // ── Product proof — real output example, not a checkmark list ─────────
         Column(
-            modifier = Modifier.fillMaxWidth(),
-            horizontalAlignment = Alignment.CenterHorizontally
+            modifier = Modifier
+                .fillMaxWidth()
+                .background(colors.SurfaceElevated, RoundedCornerShape(12.dp))
+                .border(BorderStroke(1.dp, colors.Border), RoundedCornerShape(12.dp))
+                .padding(16.dp)
         ) {
+            Row(verticalAlignment = Alignment.CenterVertically) {
+                LGBadge(text = "HIGH RISK", color = colors.RiskHigh)
+                Spacer(modifier = Modifier.weight(1f))
+                Text(
+                    text = "Non-refundable deposit clause",
+                    style = LGType.Caption,
+                    color = colors.TextSecondary
+                )
+            }
+            Spacer(modifier = Modifier.height(12.dp))
             Text(
-                text = proPrice ?: "$4.99/month",
-                style = com.example.ui.primitives.LGType.Title.copy(
-                    fontWeight = FontWeight.Bold,
-                    fontSize = 20.sp
-                ),
+                text = "\"Tenant forfeits full deposit for any lease break, regardless of notice given.\"",
+                style = LGType.Body.copy(fontStyle = FontStyle.Italic),
                 color = colors.TextPrimary
             )
-            Spacer(modifier = Modifier.height(2.dp))
+            Spacer(modifier = Modifier.height(12.dp))
             Text(
-                text = "Cancel anytime · No commitment",
-                style = com.example.ui.primitives.LGType.Caption.copy(
-                    fontSize = 12.sp
-                ),
-                color = colors.TextSecondary
+                text = "Pro drafts a counter-proposal email for this in one tap.",
+                style = LGType.Caption.copy(fontWeight = FontWeight.Medium),
+                color = colors.Accent
             )
         }
 
-        // ═════════════════════════════════════════════════════════════════
-        // CTA Button — Navy/Dark, 24dp radius, 56dp touch target
-        // ═════════════════════════════════════════════════════════════════
-        Button(
+        Spacer(modifier = Modifier.height(24.dp))
+
+        // ── Price ─────────────────────────────────────────────────────────────
+        Text(
+            text = proPrice ?: "$4.99/month",
+            style = LGType.Title,
+            color = colors.TextPrimary
+        )
+        Spacer(modifier = Modifier.height(2.dp))
+        Text("Cancel anytime", style = LGType.Caption, color = colors.TextTertiary)
+
+        Spacer(modifier = Modifier.height(20.dp))
+
+        // ── CTA — flat LGButton, no glow ─────────────────────────────────────
+        LGButton(
+            text = if (isLoading) "Processing…" else "Continue",
             onClick = {
                 val activity = context.findActivity()
-
                 activity?.let { act ->
                     isLoading = true
+                    // Qonversion purchase logic preserved byte-for-byte
                     Qonversion.shared.products(object : QonversionProductsCallback {
                         override fun onSuccess(products: Map<String, QProduct>) {
                             val qProduct = products[com.example.Constants.PRO_PRODUCT_ID]
@@ -205,7 +175,6 @@ private fun PaywallContent(
                                 Toast.makeText(context, "Product not found", Toast.LENGTH_SHORT).show()
                             }
                         }
-
                         override fun onError(error: QonversionError) {
                             isLoading = false
                             Toast.makeText(context, "Failed to load products: ${error.description}", Toast.LENGTH_LONG).show()
@@ -215,79 +184,28 @@ private fun PaywallContent(
                     Toast.makeText(context, "Activity context required for billing", Toast.LENGTH_SHORT).show()
                 }
             },
+            enabled = !isLoading,
+            modifier = Modifier.fillMaxWidth()
+        )
+
+        Spacer(modifier = Modifier.height(8.dp))
+
+        // ── Restore purchases — plain text link ───────────────────────────────
+        Text(
+            text = "Restore purchases",
+            style = LGType.Caption,
+            color = colors.TextSecondary,
             modifier = Modifier
                 .fillMaxWidth()
-                .defaultMinSize(minHeight = 56.dp)
-                .height(56.dp),
-            shape = RoundedCornerShape(12.dp),
-            colors = ButtonDefaults.elevatedButtonColors(
-                containerColor = colors.PrimaryAccent,
-                contentColor = Color.White
-            ),
-            elevation = ButtonDefaults.buttonElevation(
-                defaultElevation = 3.dp,
-                pressedElevation = 1.dp
-            ),
-            enabled = !isLoading
-        ) {
-            if (isLoading) {
-                CircularProgressIndicator(
-                    modifier = Modifier.size(22.dp),
-                    color = Color.White,
-                    strokeWidth = 2.dp
-                )
-            } else {
-                Text(
-                    text = "Unlock Pro",
-                    style = com.example.ui.primitives.LGType.Title.copy(
-                        fontSize = 16.sp,
-                        fontWeight = FontWeight.Bold,
-                        color = Color.White
+                .clickableNoRipple {
+                    viewModel.restorePurchases(
+                        context = context,
+                        onSuccess = { onDismiss() },
+                        onError = { err -> Toast.makeText(context, err, Toast.LENGTH_SHORT).show() }
                     )
-                )
-            }
-        }
-    }
-}
-
-
-// ═══════════════════════════════════════════════════════════════════════════════
-// REUSABLE: Feature Bullet — Emerald green accent checkmark
-// ═══════════════════════════════════════════════════════════════════════════════
-
-@Composable
-private fun FeatureBullet(icon: ImageVector, text: String) {
-    val colors = com.example.ui.primitives.LocalLGColors.current
-
-    Row(
-        modifier = Modifier
-            .fillMaxWidth()
-            .defaultMinSize(minHeight = 48.dp),
-        verticalAlignment = Alignment.CenterVertically
-    ) {
-        // ── Green accent checkmark container ─────────────────────────
-        Box(
-            modifier = Modifier
-                .size(32.dp)
-                .clip(RoundedCornerShape(8.dp))
-                .background(colors.AccentSafe.copy(alpha = 0.12f)),
-            contentAlignment = Alignment.Center
-        ) {
-            Icon(
-                imageVector = icon,
-                contentDescription = null,
-                tint = colors.AccentSafe,
-                modifier = Modifier.size(18.dp)
-            )
-        }
-        Spacer(modifier = Modifier.width(14.dp))
-        Text(
-            text = text,
-            style = com.example.ui.primitives.LGType.Body.copy(
-                fontWeight = FontWeight.Medium,
-                fontSize = 15.sp
-            ),
-            color = colors.TextPrimary
+                }
+                .padding(vertical = 10.dp),
+            textAlign = TextAlign.Center
         )
     }
 }

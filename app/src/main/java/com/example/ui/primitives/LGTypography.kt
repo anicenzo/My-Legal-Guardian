@@ -6,100 +6,58 @@ import androidx.compose.ui.text.font.FontWeight
 import androidx.compose.ui.unit.sp
 
 // ═══════════════════════════════════════════════════════════════════════════════
-// My Legal Guardian — Custom Typography Scale Tokens (Strict Sans-Serif)
+// Legal AI — Typography Scale (Direction A: Single Serif Voice)
 // ═══════════════════════════════════════════════════════════════════════════════
-// Enforce modern, clean geometric Sans-Serif system-wide for every single style.
-// All styles enforce deliberate ~1.3–1.4x line-height ratios.
+// One font family for all text — evokes document, legal, guardian.
+// Controlled weights create hierarchy without family mixing.
+// Swap `FontFamily.Serif` → `FontFamily.SansSerif` for Direction B (fintech).
 
 object LGType {
+    private val family = FontFamily.Serif
 
-    // ── Display: Hero titles ("Ready to Scan", "Unlock Pro") ──────────────
+    // ── Canonical scale (use these in new code) ───────────────────────────────
     val Display = TextStyle(
-        fontFamily = FontFamily.SansSerif,
-        fontWeight = FontWeight.Bold,
-        fontSize = 28.sp,
-        lineHeight = 36.sp,
-        letterSpacing = (-0.3).sp
-    )
-
-    // ── Headline: Section headers, major banners ──────────────────────────
-    val Headline = TextStyle(
-        fontFamily = FontFamily.SansSerif,
-        fontWeight = FontWeight.Bold,
-        fontSize = 22.sp,
-        lineHeight = 30.sp,
-        letterSpacing = (-0.2).sp
-    )
-
-    // ── Title: Card titles, primary section headers ───────────────────────
-    val Title = TextStyle(
-        fontFamily = FontFamily.SansSerif,
-        fontWeight = FontWeight.Bold,
-        fontSize = 18.sp,
-        lineHeight = 24.sp,
-        letterSpacing = 0.sp
-    )
-
-    // ── Subtitle: Grouping headers, item titles ───────────────────────────
-    val Subtitle = TextStyle(
-        fontFamily = FontFamily.SansSerif,
+        fontFamily = family,
         fontWeight = FontWeight.SemiBold,
-        fontSize = 15.sp,
-        lineHeight = 20.sp,
-        letterSpacing = 0.1.sp
+        fontSize = 30.sp,
+        lineHeight = 36.sp
     )
-
-    // ── Body: Descriptions, clause explanations ───────────────────────────
+    val Title = TextStyle(
+        fontFamily = family,
+        fontWeight = FontWeight.SemiBold,
+        fontSize = 22.sp,
+        lineHeight = 28.sp
+    )
+    val Heading = TextStyle(
+        fontFamily = family,
+        fontWeight = FontWeight.Medium,
+        fontSize = 17.sp,
+        lineHeight = 24.sp
+    )
     val Body = TextStyle(
-        fontFamily = FontFamily.SansSerif,
+        fontFamily = family,
         fontWeight = FontWeight.Normal,
-        fontSize = 14.sp,
-        lineHeight = 21.sp,
-        letterSpacing = 0.15.sp
+        fontSize = 15.sp,
+        lineHeight = 22.sp
     )
-
-    // ── BodySmall: Secondary descriptions, metadata lines ────────────────
-    val BodySmall = TextStyle(
-        fontFamily = FontFamily.SansSerif,
+    val Caption = TextStyle(
+        fontFamily = family,
         fontWeight = FontWeight.Normal,
         fontSize = 13.sp,
-        lineHeight = 18.sp,
-        letterSpacing = 0.15.sp
+        lineHeight = 18.sp
     )
-
-    // ── Button: Interactive action labels ────────────────────────────────
-    val Button = TextStyle(
-        fontFamily = FontFamily.SansSerif,
-        fontWeight = FontWeight.Bold,
-        fontSize = 15.sp,
-        lineHeight = 20.sp,
-        letterSpacing = 0.2.sp
-    )
-
-    // ── Label: Badges, button labels, uppercase indicators ────────────────
-    val Label = TextStyle(
-        fontFamily = FontFamily.SansSerif,
-        fontWeight = FontWeight.SemiBold,
-        fontSize = 11.sp,
-        lineHeight = 15.sp,
-        letterSpacing = 0.5.sp
-    )
-
-    // ── Caption: Small helper notes, timestamp text ───────────────────────
-    val Caption = TextStyle(
-        fontFamily = FontFamily.SansSerif,
-        fontWeight = FontWeight.Normal,
-        fontSize = 10.sp,
-        lineHeight = 14.sp,
-        letterSpacing = 0.2.sp
-    )
-
-    // ── Mono: Raw contract text snippets ──────────────────────────────────
     val Mono = TextStyle(
         fontFamily = FontFamily.Monospace,
-        fontWeight = FontWeight.Medium,
-        fontSize = 12.sp,
-        lineHeight = 17.sp,
-        letterSpacing = 0.sp
+        fontWeight = FontWeight.Normal,
+        fontSize = 13.sp,
+        lineHeight = 18.sp
     )
+
+    // ── Backward-compat aliases (prevent compilation errors in existing callers) ─
+    // These map old names → closest new canonical style. Delete after full cleanup.
+    val Headline  get() = Title    // old: 22sp Bold → Title: 22sp SemiBold Serif
+    val Subtitle  get() = Heading  // old: 15sp SemiBold → Heading: 17sp Medium Serif
+    val BodySmall get() = Caption  // old: 13sp Normal → Caption: 13sp Normal Serif
+    val Button    get() = Heading  // old: 15sp Bold → Heading: 17sp Medium Serif
+    val Label     get() = Caption  // old: 11sp SemiBold → Caption: 13sp Normal Serif
 }

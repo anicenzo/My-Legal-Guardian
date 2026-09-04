@@ -10,6 +10,9 @@ import androidx.compose.animation.expandVertically
 import androidx.compose.animation.fadeIn
 import androidx.compose.animation.fadeOut
 import androidx.compose.animation.shrinkVertically
+import androidx.compose.foundation.BorderStroke
+import androidx.compose.foundation.background
+import androidx.compose.foundation.border
 import androidx.compose.foundation.clickable
 import androidx.compose.foundation.layout.*
 import androidx.compose.foundation.shape.RoundedCornerShape
@@ -17,7 +20,6 @@ import androidx.compose.material.icons.Icons
 import androidx.compose.material.icons.filled.Warning
 import androidx.compose.material.icons.rounded.Info
 import androidx.compose.material3.Icon
-import androidx.compose.material3.Surface
 import androidx.compose.material3.Text
 import androidx.compose.runtime.*
 import androidx.compose.ui.Alignment
@@ -65,7 +67,7 @@ fun SafeguardExpandableItem(clause: String) {
     Column(
         modifier = Modifier
             .fillMaxWidth()
-            .clip(RoundedCornerShape(16.dp))
+            .clip(RoundedCornerShape(10.dp))
             .animateContentSize(
                 animationSpec = spring(
                     dampingRatio = Spring.DampingRatioNoBouncy,
@@ -78,23 +80,21 @@ fun SafeguardExpandableItem(clause: String) {
             modifier = Modifier
                 .fillMaxWidth()
                 .defaultMinSize(minHeight = 48.dp)
-                .clip(RoundedCornerShape(16.dp))
+                .clip(RoundedCornerShape(10.dp))
                 .clickable { expanded = !expanded }
-                .padding(vertical = 12.dp, horizontal = 8.dp),
+                .padding(vertical = 10.dp, horizontal = 8.dp),
             verticalAlignment = Alignment.CenterVertically
         ) {
             Icon(
                 imageVector = Icons.Filled.Warning,
                 contentDescription = "Missing safeguard",
-                tint = colors.AccentWarning,
-                modifier = Modifier.size(20.dp)
+                tint = colors.RiskMedium,  // AccentWarning → RiskMedium
+                modifier = Modifier.size(18.dp)
             )
             Spacer(modifier = Modifier.width(12.dp))
             Text(
                 text = clause,
-                style = LGType.Subtitle.copy(
-                    fontWeight = FontWeight.SemiBold
-                ),
+                style = LGType.Body.copy(fontWeight = FontWeight.Medium),
                 color = colors.TextPrimary,
                 modifier = Modifier.weight(1f)
             )
@@ -102,12 +102,12 @@ fun SafeguardExpandableItem(clause: String) {
             Icon(
                 imageVector = Icons.Rounded.Info,
                 contentDescription = if (expanded) "Collapse explanation" else "Show explanation",
-                tint = if (expanded) colors.TextPrimary else colors.TextSecondary,
-                modifier = Modifier.size(20.dp)
+                tint = if (expanded) colors.TextPrimary else colors.TextTertiary,
+                modifier = Modifier.size(18.dp)
             )
         }
 
-        // Expanded explanation
+        // Expanded explanation — flat, no M3 Surface
         AnimatedVisibility(
             visible = expanded,
             enter = fadeIn(tween(200)) + expandVertically(
@@ -117,20 +117,18 @@ fun SafeguardExpandableItem(clause: String) {
                 animationSpec = tween(200, easing = FastOutSlowInEasing)
             )
         ) {
-            Surface(
+            Box(
                 modifier = Modifier
                     .fillMaxWidth()
-                    .padding(start = 32.dp, end = 4.dp, top = 2.dp, bottom = 8.dp),
-                color = colors.ExpandedSurface,
-                shape = RoundedCornerShape(16.dp)
+                    .padding(start = 30.dp, end = 4.dp, top = 4.dp, bottom = 10.dp)
+                    .background(colors.SurfaceElevated, RoundedCornerShape(8.dp))  // ExpandedSurface → SurfaceElevated
+                    .border(BorderStroke(1.dp, colors.Border), RoundedCornerShape(8.dp))
             ) {
                 Text(
                     text = safeguardExplanations[clause]
                         ?: "$clause: Standard protection clause that must be included to safeguard legal rights.",
-                    style = LGType.BodySmall.copy(
-                        lineHeight = 19.sp,
-                        color = colors.TextPrimary
-                    ),
+                    style = LGType.Caption.copy(lineHeight = 19.sp),
+                    color = colors.TextPrimary,
                     modifier = Modifier.padding(LGSpacing.md)
                 )
             }

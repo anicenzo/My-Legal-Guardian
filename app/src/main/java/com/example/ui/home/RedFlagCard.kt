@@ -5,6 +5,9 @@ import androidx.compose.animation.core.animateFloatAsState
 import androidx.compose.animation.core.spring
 import androidx.compose.animation.core.tween
 import androidx.compose.animation.core.Spring
+import androidx.compose.foundation.BorderStroke
+import androidx.compose.foundation.background
+import androidx.compose.foundation.border
 import androidx.compose.foundation.clickable
 import androidx.compose.foundation.layout.*
 import androidx.compose.foundation.shape.RoundedCornerShape
@@ -41,7 +44,8 @@ fun RedFlagCard(
         label = "ChevronRotation"
     )
 
-    ElevatedCard(
+    // Flat card — border only, no elevation
+    Column(
         modifier = Modifier
             .fillMaxWidth()
             .animateContentSize(
@@ -49,17 +53,11 @@ fun RedFlagCard(
                     dampingRatio = Spring.DampingRatioNoBouncy,
                     stiffness = Spring.StiffnessMedium
                 )
-            ),
-        shape = RoundedCornerShape(24.dp),
-        colors = CardDefaults.elevatedCardColors(
-            containerColor = colors.Surface
-        ),
-        elevation = CardDefaults.elevatedCardElevation(
-            defaultElevation = 2.dp
-        )
+            )
+            .background(colors.Surface, RoundedCornerShape(12.dp))
+            .border(BorderStroke(1.dp, colors.Border), RoundedCornerShape(12.dp))
     ) {
-        Column(modifier = Modifier.padding(start = 8.dp, end = 20.dp, top = 10.dp, bottom = 10.dp)) {
-            // Collapsed Header: Checkbox + Title + Pill Badge + Chevron
+        Column(modifier = Modifier.padding(start = 4.dp, end = 16.dp, top = 8.dp, bottom = 8.dp)) {
             Row(
                 modifier = Modifier
                     .fillMaxWidth()
@@ -71,69 +69,49 @@ fun RedFlagCard(
                     checked = isChecked,
                     onCheckedChange = onCheckedChange,
                     colors = CheckboxDefaults.colors(
-                        checkedColor = colors.PrimaryAccent,
-                        uncheckedColor = colors.TextSecondary
+                        checkedColor = colors.Accent,
+                        uncheckedColor = colors.TextTertiary
                     )
                 )
                 Text(
                     text = flag.displayName,
-                    style = LGType.Title.copy(
-                        fontSize = 15.sp,
-                        fontWeight = FontWeight.SemiBold
-                    ),
+                    style = LGType.Body.copy(fontWeight = FontWeight.Medium),
                     color = colors.TextPrimary,
                     modifier = Modifier.weight(1f)
                 )
                 Spacer(modifier = Modifier.width(8.dp))
-
-                // Pill-shaped severity badge
-                LGBadge(
-                    text = sevLabel,
-                    color = sevColor
-                )
-
+                LGBadge(text = sevLabel, color = sevColor)
                 Spacer(modifier = Modifier.width(8.dp))
                 Icon(
                     imageVector = Icons.Filled.ExpandMore,
                     contentDescription = if (expanded) "Collapse" else "Expand",
-                    tint = colors.TextSecondary,
-                    modifier = Modifier
-                        .size(24.dp)
-                        .rotate(chevronRotation)
+                    tint = colors.TextTertiary,
+                    modifier = Modifier.size(20.dp).rotate(chevronRotation)
                 )
             }
 
-            // Expanded Content: Explanation + Contract Quote
             if (expanded) {
                 Column(
-                    modifier = Modifier.padding(
-                        start = 48.dp, end = 0.dp,
-                        top = 8.dp, bottom = 8.dp
-                    )
+                    modifier = Modifier.padding(start = 44.dp, end = 0.dp, top = 6.dp, bottom = 8.dp)
                 ) {
                     Text(
                         text = flag.explanation,
-                        style = LGType.Body.copy(
-                            lineHeight = 20.sp
-                        ),
-                        color = colors.TextSecondary,
-                        maxLines = Int.MAX_VALUE
+                        style = LGType.Caption.copy(lineHeight = 20.sp),
+                        color = colors.TextSecondary
                     )
                     if (flag.matchedSnippet.isNotBlank()) {
-                        Spacer(modifier = Modifier.height(10.dp))
-                        Surface(
-                            modifier = Modifier.fillMaxWidth(),
-                            color = colors.ExpandedSurface,
-                            shape = RoundedCornerShape(16.dp)
+                        Spacer(modifier = Modifier.height(8.dp))
+                        Box(
+                            modifier = Modifier
+                                .fillMaxWidth()
+                                .background(colors.SurfaceElevated, RoundedCornerShape(8.dp))
+                                .border(BorderStroke(1.dp, colors.Border), RoundedCornerShape(8.dp))
+                                .padding(12.dp)
                         ) {
                             Text(
                                 text = "\"${flag.matchedSnippet}\"",
-                                style = LGType.Mono.copy(
-                                    lineHeight = 17.sp
-                                ),
-                                color = colors.TextPrimary,
-                                modifier = Modifier.padding(14.dp),
-                                maxLines = Int.MAX_VALUE
+                                style = LGType.Mono,
+                                color = colors.TextPrimary
                             )
                         }
                     }

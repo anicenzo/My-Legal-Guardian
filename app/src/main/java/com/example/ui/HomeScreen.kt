@@ -41,19 +41,16 @@ fun HomeScreen(
     val state by viewModel.uiState.collectAsState()
     val isProUser by viewModel.isProUser.collectAsState()
     val freeScansRemaining by viewModel.freeScansRemaining.collectAsState()
-    val isDarkMode by viewModel.isDarkMode.collectAsState()
     val context = LocalContext.current
     val activity = context.findActivity()
     val coroutineScope = rememberCoroutineScope()
 
-    // System Back button: return to Idle scan screen if currently in Result/Status/Error
     BackHandler(enabled = state !is AuditState.Idle) {
         viewModel.reset()
     }
 
     var showPaywall by remember { mutableStateOf(false) }
 
-    // Camera Document Scanner launcher (Google Play services Document Scanner API)
     val scannerLauncher = rememberLauncherForActivityResult(
         contract = ActivityResultContracts.StartIntentSenderForResult()
     ) { result ->
@@ -65,7 +62,6 @@ fun HomeScreen(
         }
     }
 
-    // PDF Document Picker (ML Kit offline PDF OCR)
     val pdfPickerLauncher = rememberLauncherForActivityResult(
         contract = ActivityResultContracts.OpenDocument()
     ) { uri ->
@@ -81,9 +77,7 @@ fun HomeScreen(
                         }
                     }
                 },
-                onLimitReached = {
-                    showPaywall = true
-                }
+                onLimitReached = { showPaywall = true }
             )
         }
     }
@@ -95,24 +89,22 @@ fun HomeScreen(
         )
     }
 
+    val colors = LocalLGColors.current
+    val isResultState = state is AuditState.Result
+
     Column(
         modifier = modifier
             .fillMaxSize()
-            .background(LocalLGColors.current.Background)
+            .background(colors.Background)
     ) {
-        // Top App Bar — Dynamic Navigation with Back Button on Results Screen
-        val colors = LocalLGColors.current
-        val isResultState = state is AuditState.Result
-
-        Surface(
-            color = colors.HeaderBackground,
-            modifier = Modifier.fillMaxWidth(),
-            shadowElevation = 4.dp
-        ) {
+        // ── Flat top bar — hairline border, no shadow ─────────────────────────
+        Column(modifier = Modifier.fillMaxWidth().background(colors.Background)) {
             Row(
                 modifier = Modifier
+                    .fillMaxWidth()
                     .statusBarsPadding()
-                    .padding(horizontal = LGSpacing.lg, vertical = LGSpacing.md),
+                    .height(56.dp)
+                    .padding(horizontal = 20.dp),
                 verticalAlignment = Alignment.CenterVertically
             ) {
                 if (isResultState) {
@@ -127,40 +119,36 @@ fun HomeScreen(
                             imageVector = Icons.AutoMirrored.Filled.ArrowBack,
                             contentDescription = "Back to scan",
                             tint = colors.TextPrimary,
-                            modifier = Modifier.size(22.dp)
+                            modifier = Modifier.size(20.dp)
                         )
                     }
                     Spacer(modifier = Modifier.width(LGSpacing.sm))
                 }
-
                 Text(
                     text = if (isResultState) "Audit Report" else "Contract Scanner",
-                    style = LGType.Title.copy(
-                        fontWeight = FontWeight.Bold,
-                        color = colors.TextPrimary
-                    )
+                    style = LGType.Title.copy(color = colors.TextPrimary),
+                    modifier = Modifier.weight(1f)
                 )
-
-                Spacer(modifier = Modifier.weight(1f))
-
                 Icon(
                     imageVector = Icons.Filled.Info,
                     contentDescription = "About",
-                    tint = colors.TextSecondary,
+                    tint = colors.TextTertiary,
                     modifier = Modifier
-                        .size(22.dp)
+                        .size(20.dp)
                         .clickable {
-                            Toast.makeText(context, "AI Contract Scanner v1.5.0", Toast.LENGTH_SHORT).show()
+                            Toast.makeText(context, "Legal AI Contract Scanner v1.5.0", Toast.LENGTH_SHORT).show()
                         }
                 )
             }
+            // Hairline bottom border
+            Box(modifier = Modifier.fillMaxWidth().height(1.dp).background(colors.Border))
         }
 
-        // Body — Animated screen state transitions
+        // ── Animated screen body ──────────────────────────────────────────────
         Box(
             modifier = Modifier
                 .fillMaxSize()
-                .padding(horizontal = LGSpacing.lg)
+                .padding(horizontal = LGSpacing.md)
         ) {
             AnimatedContent(
                 targetState = state,
@@ -186,9 +174,7 @@ fun HomeScreen(
                                 )
                             }
                         },
-                        onImportPdfClick = {
-                            pdfPickerLauncher.launch(arrayOf("application/pdf"))
-                        },
+                        onImportPdfClick = { pdfPickerLauncher.launch(arrayOf("application/pdf")) },
                         onPurchaseClick = { showPaywall = true }
                     )
                     is AuditState.Scanning  -> ScanStatusScreen("Extracting Document Text...")
@@ -201,7 +187,7 @@ fun HomeScreen(
                         onPurchaseClick = { showPaywall = true },
                         viewModel = viewModel
                     )
-                    is AuditState.Error     -> ScanErrorScreen(currentState.message, viewModel::reset)
+                    is AuditState.Error -> ScanErrorScreen(currentState.message, viewModel::reset)
                 }
             }
         }
@@ -209,7 +195,7 @@ fun HomeScreen(
 }
 
 private tailrec fun Context.findActivity(): Activity? = when (this) {
-    is Activity -> this
+    is Activity      -> this
     is ContextWrapper -> baseContext.findActivity()
-    else -> null
+    else             -> null
 }
