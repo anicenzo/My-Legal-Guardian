@@ -17,6 +17,7 @@ import androidx.compose.ui.text.font.FontStyle
 import androidx.compose.ui.text.font.FontWeight
 import androidx.compose.ui.text.style.TextAlign
 import androidx.compose.ui.unit.dp
+import androidx.compose.ui.unit.sp
 import com.qonversion.android.sdk.Qonversion
 import com.qonversion.android.sdk.dto.QonversionError
 import com.qonversion.android.sdk.dto.entitlements.QEntitlement
@@ -25,19 +26,7 @@ import com.qonversion.android.sdk.listeners.QonversionEntitlementsCallback
 import com.qonversion.android.sdk.listeners.QonversionProductsCallback
 
 import com.example.util.findActivity
-import com.example.ui.primitives.LGBadge
-import com.example.ui.primitives.LGButton
-import com.example.ui.primitives.LGButtonVariant
-import com.example.ui.primitives.LGColorsDark
-import com.example.ui.primitives.LGType
-import com.example.ui.primitives.LocalLGColors
-import com.example.ui.primitives.clickableNoRipple
-
-// ═══════════════════════════════════════════════════════════════════════════════
-// Legal AI — Paywall Bottom Sheet (visual rebuild, logic preserved byte-for-byte)
-// ═══════════════════════════════════════════════════════════════════════════════
-// Removed: glowing squircle shield icon, green circular checkmarks, feature list.
-// Replaced with: product proof surface showing a real scan result example.
+import com.example.ui.primitives.*
 
 @OptIn(ExperimentalMaterial3Api::class)
 @Composable
@@ -90,18 +79,22 @@ private fun PaywallContent(
             .padding(bottom = 36.dp),
         verticalArrangement = Arrangement.spacedBy(0.dp)
     ) {
-        // ── Header — editorial, left-aligned ─────────────────────────────────
-        Text("Unlock Pro", style = LGType.Title, color = colors.TextPrimary)
-        Spacer(modifier = Modifier.height(6.dp))
+        // ── Header ────────────────────────────────────────────────────────────
+        Row(verticalAlignment = Alignment.CenterVertically) {
+            Text("Legal AI Pro", style = LGType.Title.copy(fontWeight = FontWeight.Bold), color = colors.TextPrimary)
+            Spacer(modifier = Modifier.width(8.dp))
+            LGBadge(text = "UNLIMITED", color = colors.Accent)
+        }
+        Spacer(modifier = Modifier.height(4.dp))
         Text(
-            text = "Unlimited scans, exportable reports, and negotiation drafts.",
-            style = LGType.Body,
+            text = "Full offline protection against hidden liabilities, fees, & traps.",
+            style = LGType.BodyMuted,
             color = colors.TextSecondary
         )
 
-        Spacer(modifier = Modifier.height(24.dp))
+        Spacer(modifier = Modifier.height(20.dp))
 
-        // ── Product proof — real output example, not a checkmark list ─────────
+        // ── Product Proof Box ─────────────────────────────────────────────────
         Column(
             modifier = Modifier
                 .fillMaxWidth()
@@ -110,49 +103,99 @@ private fun PaywallContent(
                 .padding(16.dp)
         ) {
             Row(verticalAlignment = Alignment.CenterVertically) {
-                LGBadge(text = "HIGH RISK", color = colors.RiskHigh)
+                LGBadge(text = "HIGH RISK CAUGHT", color = colors.RiskHigh, showDot = true)
                 Spacer(modifier = Modifier.weight(1f))
                 Text(
-                    text = "Non-refundable deposit clause",
+                    text = "Deposit Forfeiture",
                     style = LGType.Caption,
                     color = colors.TextSecondary
                 )
             }
-            Spacer(modifier = Modifier.height(12.dp))
+            Spacer(modifier = Modifier.height(10.dp))
             Text(
-                text = "\"Tenant forfeits full deposit for any lease break, regardless of notice given.\"",
-                style = LGType.Body.copy(fontStyle = FontStyle.Italic),
+                text = "\"Security deposit is strictly non-refundable under all circumstances and shall be retained as a mandatory reconditioning fee.\"",
+                style = LGType.ClauseQuote.copy(fontSize = 13.sp),
                 color = colors.TextPrimary
             )
-            Spacer(modifier = Modifier.height(12.dp))
+            Spacer(modifier = Modifier.height(10.dp))
             Text(
-                text = "Pro drafts a counter-proposal email for this in one tap.",
-                style = LGType.Caption.copy(fontWeight = FontWeight.Medium),
-                color = colors.Accent
+                text = "✓ Caught $2,400 potential loss & generated negotiation amendment",
+                style = LGType.Caption.copy(fontWeight = FontWeight.SemiBold),
+                color = colors.RiskLow
             )
         }
 
-        Spacer(modifier = Modifier.height(24.dp))
+        Spacer(modifier = Modifier.height(20.dp))
 
-        // ── Price ─────────────────────────────────────────────────────────────
-        Text(
-            text = proPrice ?: "$4.99/month",
-            style = LGType.Title,
-            color = colors.TextPrimary
+        // ── Value Props ───────────────────────────────────────────────────────
+        val benefits = listOf(
+            "Unlimited contract & lease scans",
+            "Instant counter-measure draft generator",
+            "Export professional PDF audit reports",
+            "100% On-Device & confidential audit engine"
         )
-        Spacer(modifier = Modifier.height(2.dp))
-        Text("Cancel anytime", style = LGType.Caption, color = colors.TextTertiary)
+
+        benefits.forEach { benefit ->
+            Row(
+                modifier = Modifier
+                    .fillMaxWidth()
+                    .padding(vertical = 4.dp),
+                verticalAlignment = Alignment.CenterVertically
+            ) {
+                Text(
+                    text = "✓",
+                    style = LGType.Body.copy(fontWeight = FontWeight.Bold),
+                    color = colors.Accent
+                )
+                Spacer(modifier = Modifier.width(10.dp))
+                Text(
+                    text = benefit,
+                    style = LGType.Body.copy(fontSize = 13.sp),
+                    color = colors.TextPrimary
+                )
+            }
+        }
 
         Spacer(modifier = Modifier.height(20.dp))
 
-        // ── CTA — flat LGButton, no glow ─────────────────────────────────────
+        // ── Price Card ────────────────────────────────────────────────────────
+        Box(
+            modifier = Modifier
+                .fillMaxWidth()
+                .background(colors.Surface, RoundedCornerShape(12.dp))
+                .border(BorderStroke(1.dp, colors.Border), RoundedCornerShape(12.dp))
+                .padding(16.dp)
+        ) {
+            Row(
+                modifier = Modifier.fillMaxWidth(),
+                verticalAlignment = Alignment.CenterVertically,
+                horizontalArrangement = Arrangement.SpaceBetween
+            ) {
+                Column {
+                    Text(
+                        text = "Pro Membership",
+                        style = LGType.Heading.copy(fontWeight = FontWeight.SemiBold),
+                        color = colors.TextPrimary
+                    )
+                    Text("Cancel anytime · No commitments", style = LGType.Caption, color = colors.TextTertiary)
+                }
+                Text(
+                    text = proPrice ?: "$4.99/mo",
+                    style = LGType.Title.copy(fontWeight = FontWeight.Bold),
+                    color = colors.Accent
+                )
+            }
+        }
+
+        Spacer(modifier = Modifier.height(20.dp))
+
+        // ── Primary Action CTA ────────────────────────────────────────────────
         LGButton(
-            text = if (isLoading) "Processing…" else "Continue",
+            text = if (isLoading) "Connecting to Store…" else "Upgrade to Pro",
             onClick = {
                 val activity = context.findActivity()
                 activity?.let { act ->
                     isLoading = true
-                    // Qonversion purchase logic preserved byte-for-byte
                     Qonversion.shared.products(object : QonversionProductsCallback {
                         override fun onSuccess(products: Map<String, QProduct>) {
                             val qProduct = products[com.example.Constants.PRO_PRODUCT_ID]
@@ -184,16 +227,17 @@ private fun PaywallContent(
                     Toast.makeText(context, "Activity context required for billing", Toast.LENGTH_SHORT).show()
                 }
             },
+            variant = LGButtonVariant.PrimaryHero,
             enabled = !isLoading,
             modifier = Modifier.fillMaxWidth()
         )
 
         Spacer(modifier = Modifier.height(8.dp))
 
-        // ── Restore purchases — plain text link ───────────────────────────────
+        // ── Restore purchases ─────────────────────────────────────────────────
         Text(
             text = "Restore purchases",
-            style = LGType.Caption,
+            style = LGType.Caption.copy(fontWeight = FontWeight.Medium),
             color = colors.TextSecondary,
             modifier = Modifier
                 .fillMaxWidth()

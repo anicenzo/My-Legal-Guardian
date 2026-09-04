@@ -6,58 +6,110 @@ import androidx.compose.ui.text.font.FontWeight
 import androidx.compose.ui.unit.sp
 
 // ═══════════════════════════════════════════════════════════════════════════════
-// Legal AI — Typography Scale (Direction A: Single Serif Voice)
+// Legal AI — Modern Technical Editorial Typography Scale
 // ═══════════════════════════════════════════════════════════════════════════════
-// One font family for all text — evokes document, legal, guardian.
-// Controlled weights create hierarchy without family mixing.
-// Swap `FontFamily.Serif` → `FontFamily.SansSerif` for Direction B (fintech).
+// Modern crisp Sans-Serif for high-density UI chrome, controls, metrics & badges.
+// Refined Serif reserved for legal document headers and formal clause text.
 
 object LGType {
-    private val family = FontFamily.Serif
+    private val sans = FontFamily.SansSerif
+    private val serif = FontFamily.Serif
+    private val mono = FontFamily.Monospace
 
-    // ── Canonical scale (use these in new code) ───────────────────────────────
-    val Display = TextStyle(
-        fontFamily = family,
-        fontWeight = FontWeight.SemiBold,
+    // ── Canonical scale ───────────────────────────────────────────────────────
+    val DisplayLarge = TextStyle(
+        fontFamily = sans,
+        fontWeight = FontWeight.Bold,
         fontSize = 30.sp,
-        lineHeight = 36.sp
+        lineHeight = 36.sp,
+        letterSpacing = (-0.5).sp
     )
-    val Title = TextStyle(
-        fontFamily = family,
+
+    val Display = TextStyle(
+        fontFamily = sans,
         fontWeight = FontWeight.SemiBold,
-        fontSize = 22.sp,
-        lineHeight = 28.sp
+        fontSize = 24.sp,
+        lineHeight = 30.sp,
+        letterSpacing = (-0.4).sp
     )
+
+    val Title = TextStyle(
+        fontFamily = sans,
+        fontWeight = FontWeight.SemiBold,
+        fontSize = 19.sp,
+        lineHeight = 25.sp,
+        letterSpacing = (-0.2).sp
+    )
+
     val Heading = TextStyle(
-        fontFamily = family,
-        fontWeight = FontWeight.Medium,
-        fontSize = 17.sp,
-        lineHeight = 24.sp
-    )
-    val Body = TextStyle(
-        fontFamily = family,
-        fontWeight = FontWeight.Normal,
+        fontFamily = sans,
+        fontWeight = FontWeight.SemiBold,
         fontSize = 15.sp,
+        lineHeight = 21.sp
+    )
+
+    val Subheading = TextStyle(
+        fontFamily = sans,
+        fontWeight = FontWeight.Medium,
+        fontSize = 14.sp,
+        lineHeight = 20.sp
+    )
+
+    val Body = TextStyle(
+        fontFamily = sans,
+        fontWeight = FontWeight.Normal,
+        fontSize = 14.sp,
+        lineHeight = 21.sp
+    )
+
+    val BodyMedium = TextStyle(
+        fontFamily = sans,
+        fontWeight = FontWeight.Medium,
+        fontSize = 14.sp,
+        lineHeight = 21.sp
+    )
+
+    val BodyMuted = TextStyle(
+        fontFamily = sans,
+        fontWeight = FontWeight.Normal,
+        fontSize = 13.sp,
+        lineHeight = 19.sp
+    )
+
+    val Caption = TextStyle(
+        fontFamily = sans,
+        fontWeight = FontWeight.Medium,
+        fontSize = 11.sp,
+        lineHeight = 15.sp,
+        letterSpacing = 0.2.sp
+    )
+
+    val Mono = TextStyle(
+        fontFamily = mono,
+        fontWeight = FontWeight.Medium,
+        fontSize = 12.sp,
+        lineHeight = 16.sp
+    )
+
+    // Legal / Editorial Serif for document titles & formal quoted clauses
+    val DocumentTitle = TextStyle(
+        fontFamily = serif,
+        fontWeight = FontWeight.SemiBold,
+        fontSize = 21.sp,
+        lineHeight = 27.sp
+    )
+
+    val ClauseQuote = TextStyle(
+        fontFamily = serif,
+        fontWeight = FontWeight.Normal,
+        fontSize = 14.sp,
         lineHeight = 22.sp
     )
-    val Caption = TextStyle(
-        fontFamily = family,
-        fontWeight = FontWeight.Normal,
-        fontSize = 13.sp,
-        lineHeight = 18.sp
-    )
-    val Mono = TextStyle(
-        fontFamily = FontFamily.Monospace,
-        fontWeight = FontWeight.Normal,
-        fontSize = 13.sp,
-        lineHeight = 18.sp
-    )
 
-    // ── Backward-compat aliases (prevent compilation errors in existing callers) ─
-    // These map old names → closest new canonical style. Delete after full cleanup.
-    val Headline  get() = Title    // old: 22sp Bold → Title: 22sp SemiBold Serif
-    val Subtitle  get() = Heading  // old: 15sp SemiBold → Heading: 17sp Medium Serif
-    val BodySmall get() = Caption  // old: 13sp Normal → Caption: 13sp Normal Serif
-    val Button    get() = Heading  // old: 15sp Bold → Heading: 17sp Medium Serif
-    val Label     get() = Caption  // old: 11sp SemiBold → Caption: 13sp Normal Serif
+    // ── Backward-compat aliases ───────────────────────────────────────────────
+    val Headline  get() = Title
+    val Subtitle  get() = Heading
+    val BodySmall get() = Caption
+    val Button    get() = Heading
+    val Label     get() = Caption
 }

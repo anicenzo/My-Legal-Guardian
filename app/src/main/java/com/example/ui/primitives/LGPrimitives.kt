@@ -1,9 +1,12 @@
 package com.example.ui.primitives
 
 import androidx.compose.animation.core.FastOutSlowInEasing
+import androidx.compose.animation.core.Spring
 import androidx.compose.animation.core.animateFloatAsState
+import androidx.compose.animation.core.spring
 import androidx.compose.animation.core.tween
 import androidx.compose.foundation.BorderStroke
+import androidx.compose.foundation.Canvas
 import androidx.compose.foundation.background
 import androidx.compose.foundation.border
 import androidx.compose.foundation.clickable
@@ -22,32 +25,30 @@ import androidx.compose.ui.draw.alpha
 import androidx.compose.ui.draw.clip
 import androidx.compose.ui.draw.scale
 import androidx.compose.ui.focus.onFocusChanged
+import androidx.compose.ui.graphics.Brush
 import androidx.compose.ui.graphics.Color
 import androidx.compose.ui.graphics.SolidColor
 import androidx.compose.ui.graphics.StrokeCap
 import androidx.compose.ui.graphics.drawscope.Stroke
+import androidx.compose.ui.graphics.vector.ImageVector
 import androidx.compose.ui.platform.testTag
 import androidx.compose.ui.semantics.Role
 import androidx.compose.ui.semantics.contentDescription
 import androidx.compose.ui.semantics.role
 import androidx.compose.ui.semantics.semantics
 import androidx.compose.ui.text.font.FontWeight
+import androidx.compose.ui.text.style.TextAlign
 import androidx.compose.ui.unit.Dp
 import androidx.compose.ui.unit.dp
 import androidx.compose.ui.unit.sp
-import androidx.compose.foundation.Canvas
 import androidx.compose.material.icons.Icons
 import androidx.compose.material.icons.filled.*
-import androidx.compose.ui.text.style.TextAlign
 
 // ═══════════════════════════════════════════════════════════════════════════════
-// Legal AI — Flat/Editorial UI Primitives
+// Legal AI — Modern Technical Editorial UI Primitives
 // ═══════════════════════════════════════════════════════════════════════════════
-// Design language: flat surfaces, 1dp hairline borders, no shadow/glow.
-// Elevation is communicated by surface lightness steps (Surface < SurfaceElevated).
-// One accent color (Accent) used sparingly. Corner radius 10–14dp (not 24dp).
 
-// ── Spacing scale (kept for backward-compat) ──────────────────────────────────
+// ── Spacing scale ─────────────────────────────────────────────────────────────
 object LGSpacing {
     val xs: Dp = 4.dp
     val sm: Dp = 8.dp
@@ -56,10 +57,15 @@ object LGSpacing {
     val xl: Dp = 32.dp
 }
 
-// ── Button variant ─────────────────────────────────────────────────────────────
-enum class LGButtonVariant { Primary, Secondary }
+// ── Button variants ────────────────────────────────────────────────────────────
+enum class LGButtonVariant {
+    PrimaryHero, // Crisp Titanium White with deep obsidian text
+    Primary,     // Electric Indigo
+    Secondary,   // Dark bordered card surface
+    Ghost        // Transparent with border
+}
 
-// ── clickableNoRipple — tap feedback without glow overlay ─────────────────────
+// ── Tap feedback without ripple glow ──────────────────────────────────────────
 fun Modifier.clickableNoRipple(onClick: () -> Unit): Modifier = composed {
     clickable(
         interactionSource = remember { MutableInteractionSource() },
@@ -68,7 +74,7 @@ fun Modifier.clickableNoRipple(onClick: () -> Unit): Modifier = composed {
     )
 }
 
-// ── Press-scale modifier ───────────────────────────────────────────────────────
+// ── Bouncy tactile press modifier ─────────────────────────────────────────────
 fun Modifier.lgPressClickable(
     enabled: Boolean = true,
     onClick: (() -> Unit)?
@@ -76,8 +82,15 @@ fun Modifier.lgPressClickable(
     if (onClick == null) return@composed this
     val interactionSource = remember { MutableInteractionSource() }
     val isPressed by interactionSource.collectIsPressedAsState()
-    val scale by animateFloatAsState(if (isPressed) 0.97f else 1.0f, label = "scale")
-    val alpha by animateFloatAsState(if (isPressed) 0.85f else 1.0f, label = "alpha")
+    val scale by animateFloatAsState(
+        targetValue = if (isPressed) 0.96f else 1.0f,
+        animationSpec = spring(dampingRatio = Spring.DampingRatioMediumBouncy, stiffness = Spring.StiffnessMedium),
+        label = "pressScale"
+    )
+    val alpha by animateFloatAsState(
+        targetValue = if (isPressed) 0.88f else 1.0f,
+        label = "pressAlpha"
+    )
     this
         .scale(scale)
         .alpha(alpha)
@@ -90,25 +103,31 @@ fun Modifier.lgPressClickable(
 }
 
 // ═══════════════════════════════════════════════════════════════════════════════
-// LG SURFACE — Flat card with hairline border, no shadow
+// LG SURFACE — Stepped luminance card with hairline border
 // ═══════════════════════════════════════════════════════════════════════════════
-// Use `elevated = true` for modals, expanded states — switches to SurfaceElevated bg.
 
 @Composable
 fun LGSurface(
     modifier: Modifier = Modifier,
     elevated: Boolean = false,
+    subdued: Boolean = false,
+    borderColor: Color? = null,
     onClick: (() -> Unit)? = null,
     content: @Composable ColumnScope.() -> Unit
 ) {
     val colors = LocalLGColors.current
-    val shape = RoundedCornerShape(12.dp)
-    val bg = if (elevated) colors.SurfaceElevated else colors.Surface
+    val shape = RoundedCornerShape(14.dp)
+    val bg = when {
+        subdued  -> colors.SurfaceSubdued
+        elevated -> colors.SurfaceElevated
+        else     -> colors.Surface
+    }
+    val border = borderColor ?: colors.Border
 
     Column(
         modifier = modifier
             .background(bg, shape)
-            .border(BorderStroke(1.dp, colors.Border), shape)
+            .border(BorderStroke(1.dp, border), shape)
             .then(if (onClick != null) Modifier.lgPressClickable(onClick = onClick) else Modifier)
             .padding(16.dp),
         content = content
@@ -116,7 +135,7 @@ fun LGSurface(
 }
 
 // ═══════════════════════════════════════════════════════════════════════════════
-// LG BUTTON — Flat fill, no glow, 10dp radius
+// LG BUTTON — Tactile high-contrast button with spring physics
 // ═══════════════════════════════════════════════════════════════════════════════
 
 @Composable
@@ -124,30 +143,37 @@ fun LGButton(
     text: String,
     onClick: () -> Unit,
     modifier: Modifier = Modifier,
-    variant: LGButtonVariant = LGButtonVariant.Primary,
+    icon: ImageVector? = null,
+    variant: LGButtonVariant = LGButtonVariant.PrimaryHero,
     enabled: Boolean = true
 ) {
     val colors = LocalLGColors.current
-    val shape = RoundedCornerShape(10.dp)
+    val shape = RoundedCornerShape(12.dp)
 
-    val (bg, fg, borderColor) = when (variant) {
-        LGButtonVariant.Primary   -> Triple(colors.Accent, Color.White, null)
-        LGButtonVariant.Secondary -> Triple(colors.Surface, colors.TextPrimary, colors.Border)
+    val (bg, fg, borderStroke) = when (variant) {
+        LGButtonVariant.PrimaryHero -> Triple(colors.PrimaryHero, colors.OnPrimaryHero, null)
+        LGButtonVariant.Primary     -> Triple(colors.Accent, Color.White, null)
+        LGButtonVariant.Secondary   -> Triple(colors.Surface, colors.TextPrimary, BorderStroke(1.dp, colors.Border))
+        LGButtonVariant.Ghost       -> Triple(Color.Transparent, colors.TextPrimary, BorderStroke(1.dp, colors.Border))
     }
 
     val interactionSource = remember { MutableInteractionSource() }
     val isPressed by interactionSource.collectIsPressedAsState()
-    val scale by animateFloatAsState(if (isPressed) 0.97f else 1f, label = "btnScale")
+    val scale by animateFloatAsState(
+        targetValue = if (isPressed) 0.965f else 1f,
+        animationSpec = spring(dampingRatio = Spring.DampingRatioMediumBouncy, stiffness = Spring.StiffnessMedium),
+        label = "btnScale"
+    )
 
     Box(
         modifier = modifier
             .semantics { role = Role.Button }
-            .defaultMinSize(minWidth = 64.dp, minHeight = 52.dp)
+            .defaultMinSize(minWidth = 64.dp, minHeight = 50.dp)
             .scale(scale)
-            .background(if (enabled) bg else colors.Surface, shape)
+            .background(if (enabled) bg else colors.SurfaceSubdued, shape)
             .then(
-                if (borderColor != null)
-                    Modifier.border(BorderStroke(1.dp, borderColor), shape)
+                if (borderStroke != null)
+                    Modifier.border(borderStroke, shape)
                 else Modifier
             )
             .clip(shape)
@@ -157,44 +183,69 @@ fun LGButton(
                 enabled = enabled,
                 onClick = onClick
             )
-            .padding(horizontal = 20.dp, vertical = 14.dp),
+            .padding(horizontal = 20.dp, vertical = 13.dp),
         contentAlignment = Alignment.Center
     ) {
-        Text(
-            text = text,
-            style = LGType.Heading,
-            color = if (enabled) fg else colors.TextTertiary,
-            textAlign = TextAlign.Center
-        )
+        Row(
+            verticalAlignment = Alignment.CenterVertically,
+            horizontalArrangement = Arrangement.Center
+        ) {
+            if (icon != null) {
+                Icon(
+                    imageVector = icon,
+                    contentDescription = null,
+                    tint = if (enabled) fg else colors.TextTertiary,
+                    modifier = Modifier.size(19.dp)
+                )
+                Spacer(modifier = Modifier.width(10.dp))
+            }
+            Text(
+                text = text,
+                style = LGType.Heading.copy(fontWeight = FontWeight.SemiBold),
+                color = if (enabled) fg else colors.TextTertiary,
+                textAlign = TextAlign.Center
+            )
+        }
     }
 }
 
 // ═══════════════════════════════════════════════════════════════════════════════
-// LG BADGE — Translucent tinted background, flat, no drop shadow
+// LG BADGE — Pill badge with optional status dot indicator
 // ═══════════════════════════════════════════════════════════════════════════════
 
 @Composable
 fun LGBadge(
     text: String,
     color: Color,
-    modifier: Modifier = Modifier
+    modifier: Modifier = Modifier,
+    showDot: Boolean = false
 ) {
-    Box(
+    Row(
         modifier = modifier
-            .background(color.copy(alpha = 0.14f), RoundedCornerShape(6.dp))
-            .padding(horizontal = 8.dp, vertical = 4.dp),
-        contentAlignment = Alignment.Center
+            .background(color.copy(alpha = 0.14f), RoundedCornerShape(100.dp))
+            .border(BorderStroke(1.dp, color.copy(alpha = 0.25f)), RoundedCornerShape(100.dp))
+            .padding(horizontal = 10.dp, vertical = 4.dp),
+        verticalAlignment = Alignment.CenterVertically,
+        horizontalArrangement = Arrangement.Center
     ) {
+        if (showDot) {
+            Box(
+                modifier = Modifier
+                    .size(6.dp)
+                    .background(color, CircleShape)
+            )
+            Spacer(modifier = Modifier.width(6.dp))
+        }
         Text(
             text = text,
-            style = LGType.Caption.copy(fontWeight = FontWeight.Medium),
+            style = LGType.Caption.copy(fontWeight = FontWeight.SemiBold),
             color = color
         )
     }
 }
 
 // ═══════════════════════════════════════════════════════════════════════════════
-// RISK GAUGE — Animated circular arc indicator
+// RISK SCORING & GAUGE
 // ═══════════════════════════════════════════════════════════════════════════════
 
 fun severityColor(severity: Int): Color = when (severity) {
@@ -204,9 +255,9 @@ fun severityColor(severity: Int): Color = when (severity) {
 }
 
 fun severityLabel(severity: Int): String = when (severity) {
-    3    -> "HIGH"
-    2    -> "MEDIUM"
-    else -> "LOW"
+    3    -> "CRITICAL RISK"
+    2    -> "MODERATE RISK"
+    else -> "SAFE CLAUSE"
 }
 
 fun riskBandColor(score: Int): Color = when {
@@ -215,27 +266,30 @@ fun riskBandColor(score: Int): Color = when {
     else       -> LGColorsDark.RiskLow
 }
 
+fun riskGrade(score: Int): String = when {
+    score > 75 -> "GRADE F · SEVERE RISK"
+    score > 60 -> "GRADE D · HIGH RISK"
+    score > 30 -> "GRADE C · MODERATE RISK"
+    score > 15 -> "GRADE B · LOW RISK"
+    else       -> "GRADE A · FAVORABLE"
+}
+
 @Composable
 fun LGRiskGauge(score: Int, modifier: Modifier = Modifier) {
     val animatedScore by animateFloatAsState(
         targetValue = score.toFloat(),
-        animationSpec = tween(durationMillis = 1200, easing = FastOutSlowInEasing),
+        animationSpec = tween(durationMillis = 1100, easing = FastOutSlowInEasing),
         label = "RiskScoreAnimation"
     )
     val gaugeColor = riskBandColor(score)
-    val riskLabel = when {
-        score > 60 -> "HIGH RISK"
-        score > 30 -> "MODERATE RISK"
-        else       -> "LOW RISK"
-    }
-    val trackColor = LGColorsDark.Border
+    val trackColor = LocalLGColors.current.Border
 
     Box(
-        modifier = modifier.size(160.dp),
+        modifier = modifier.size(164.dp),
         contentAlignment = Alignment.Center
     ) {
-        Canvas(modifier = Modifier.fillMaxSize().padding(10.dp)) {
-            val strokeWidth = 10.dp.toPx()
+        Canvas(modifier = Modifier.fillMaxSize().padding(12.dp)) {
+            val strokeWidth = 11.dp.toPx()
             drawArc(
                 color = trackColor,
                 startAngle = 0f,
@@ -256,20 +310,20 @@ fun LGRiskGauge(score: Int, modifier: Modifier = Modifier) {
         Column(horizontalAlignment = Alignment.CenterHorizontally) {
             Text(
                 text = "${animatedScore.toInt()}",
-                style = LGType.Display.copy(fontSize = 32.sp, fontWeight = FontWeight.SemiBold),
+                style = LGType.DisplayLarge.copy(fontSize = 38.sp, fontWeight = FontWeight.Bold),
                 color = gaugeColor
             )
             Text(
-                text = riskLabel,
-                style = LGType.Caption,
-                color = LGColorsDark.TextSecondary
+                text = "RISK SCORE",
+                style = LGType.Caption.copy(letterSpacing = 1.sp, fontWeight = FontWeight.SemiBold),
+                color = LocalLGColors.current.TextTertiary
             )
         }
     }
 }
 
 // ═══════════════════════════════════════════════════════════════════════════════
-// LG BOTTOM NAV — Hairline top border, flat active indicator
+// LG BOTTOM NAV — Sleek docked bar with clean indicator
 // ═══════════════════════════════════════════════════════════════════════════════
 
 @Composable
@@ -280,8 +334,8 @@ fun LGBottomNav(
 ) {
     val colors = LocalLGColors.current
     val items = listOf(
-        Triple("vault",    "Vault",    Icons.Filled.Folder),
-        Triple("scan",     "Scan",     Icons.Filled.DocumentScanner),
+        Triple("vault",    "Vault",    Icons.Filled.FolderOpen),
+        Triple("scan",     "Scanner",  Icons.Filled.DocumentScanner),
         Triple("settings", "Settings", Icons.Filled.Settings)
     )
 
@@ -291,7 +345,6 @@ fun LGBottomNav(
             .background(colors.Surface)
             .navigationBarsPadding()
     ) {
-        // Hairline divider — replaces shadow elevation
         Box(
             modifier = Modifier
                 .fillMaxWidth()
@@ -301,16 +354,16 @@ fun LGBottomNav(
         Row(
             modifier = Modifier
                 .fillMaxWidth()
-                .height(64.dp)
-                .padding(horizontal = 8.dp, vertical = 6.dp),
+                .height(60.dp)
+                .padding(horizontal = 16.dp, vertical = 6.dp),
             horizontalArrangement = Arrangement.SpaceAround,
             verticalAlignment = Alignment.CenterVertically
         ) {
             items.forEach { (route, label, icon) ->
                 val isSelected = selectedRoute == route
-                Column(
-                    horizontalAlignment = Alignment.CenterHorizontally,
-                    verticalArrangement = Arrangement.Center,
+                Row(
+                    verticalAlignment = Alignment.CenterVertically,
+                    horizontalArrangement = Arrangement.Center,
                     modifier = Modifier
                         .weight(1f)
                         .fillMaxHeight()
@@ -321,20 +374,22 @@ fun LGBottomNav(
                             if (isSelected) colors.AccentMuted else Color.Transparent,
                             RoundedCornerShape(10.dp)
                         )
-                        .padding(vertical = 4.dp)
+                        .padding(horizontal = 12.dp, vertical = 6.dp)
                 ) {
                     Icon(
                         imageVector = icon,
                         contentDescription = label,
                         tint = if (isSelected) colors.Accent else colors.TextTertiary,
-                        modifier = Modifier.size(22.dp)
+                        modifier = Modifier.size(20.dp)
                     )
-                    Spacer(modifier = Modifier.height(3.dp))
-                    Text(
-                        text = label,
-                        style = LGType.Caption.copy(fontWeight = if (isSelected) FontWeight.Medium else FontWeight.Normal),
-                        color = if (isSelected) colors.Accent else colors.TextTertiary
-                    )
+                    if (isSelected) {
+                        Spacer(modifier = Modifier.width(8.dp))
+                        Text(
+                            text = label,
+                            style = LGType.Caption.copy(fontWeight = FontWeight.SemiBold),
+                            color = colors.TextPrimary
+                        )
+                    }
                 }
             }
         }
@@ -342,7 +397,7 @@ fun LGBottomNav(
 }
 
 // ═══════════════════════════════════════════════════════════════════════════════
-// LG TOP BAR — Flat header, hairline bottom border, no shadow elevation
+// LG TOP BAR — Clean flat header
 // ═══════════════════════════════════════════════════════════════════════════════
 
 @Composable
@@ -379,7 +434,6 @@ fun LGTopBar(
                 trailingIcon()
             }
         }
-        // Hairline bottom border instead of shadow
         Box(
             modifier = Modifier
                 .fillMaxWidth()
@@ -390,7 +444,7 @@ fun LGTopBar(
 }
 
 // ═══════════════════════════════════════════════════════════════════════════════
-// LG TEXT FIELD — Flat input with focus border animation
+// LG TEXT FIELD — Modern input with focus transition
 // ═══════════════════════════════════════════════════════════════════════════════
 
 @Composable
@@ -403,7 +457,7 @@ fun LGTextField(
 ) {
     val colors = LocalLGColors.current
     var isFocused by remember { mutableStateOf(false) }
-    val shape = RoundedCornerShape(10.dp)
+    val shape = RoundedCornerShape(12.dp)
 
     val borderStroke = if (isFocused) {
         BorderStroke(1.5.dp, colors.Accent)

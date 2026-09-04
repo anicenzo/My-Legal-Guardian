@@ -7,23 +7,23 @@ import androidx.compose.ui.graphics.Color
 // ═══════════════════════════════════════════════════════════════════════════════
 
 // Surfaces
-val DarkBackground      = Color(0xFF0A0B0D)
-val DarkSurface         = Color(0xFF121317)
-val DarkSurfaceVariant  = Color(0xFF1A1C21)
-val DarkOutline         = Color(0xFF262932)
+val DarkBackground      = Color(0xFF090B0E)
+val DarkSurface         = Color(0xFF131720)
+val DarkSurfaceVariant  = Color(0xFF1B212D)
+val DarkOutline         = Color(0xFF222B3A)
 
 // Text
-val DarkOnBackground    = Color(0xFFEDEDEF)
-val DarkOnSurface       = Color(0xFFEDEDEF)
-val DarkOnSurfaceVar    = Color(0xFF9498A3)
+val DarkOnBackground    = Color(0xFFF1F4F8)
+val DarkOnSurface       = Color(0xFFF1F4F8)
+val DarkOnSurfaceVar    = Color(0xFF94A3B8)
 
 // Accent
-val CobaltAccent        = Color(0xFF5B7CFA)
-val CobaltContainer     = Color(0xFF2A3352)
+val CobaltAccent        = Color(0xFF6366F1)
+val CobaltContainer     = Color(0xFF232847)
 
 // Risk
-val RiskHighColor       = Color(0xFFD9695A)
-val RiskHighContainer   = Color(0xFF3A1A17)
-val RiskMediumColor     = Color(0xFFD1A24D)
-val RiskLowColor        = Color(0xFF6FA383)
-val RiskLowContainer    = Color(0xFF162419)
+val RiskHighColor       = Color(0xFFF43F5E)
+val RiskHighContainer   = Color(0xFF3B1219)
+val RiskMediumColor     = Color(0xFFF59E0B)
+val RiskLowColor        = Color(0xFF10B981)
+val RiskLowContainer    = Color(0xFF0D281E)

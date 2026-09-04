@@ -175,7 +175,15 @@ fun HomeScreen(
                             }
                         },
                         onImportPdfClick = { pdfPickerLauncher.launch(arrayOf("application/pdf")) },
-                        onPurchaseClick = { showPaywall = true }
+                        onPurchaseClick = { showPaywall = true },
+                        onSampleScanClick = { sampleText, sampleTitle ->
+                            viewModel.attemptScan(
+                                onSuccess = {
+                                    viewModel.processExtractedText(sampleText, sampleTitle)
+                                },
+                                onLimitReached = { showPaywall = true }
+                            )
+                        }
                     )
                     is AuditState.Scanning  -> ScanStatusScreen("Extracting Document Text...")
                     is AuditState.Analyzing -> ScanStatusScreen("Running AI Risk Analysis...")
