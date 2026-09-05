@@ -4,6 +4,7 @@ import android.net.Uri
 import androidx.lifecycle.ViewModel
 import androidx.lifecycle.viewModelScope
 import com.example.engine.AuditResult
+import com.example.engine.ContractType
 import com.example.engine.LegalAuditEngine
 import com.example.engine.MatchedRedFlag
 import com.example.engine.ScannerEngine
@@ -57,7 +58,8 @@ sealed class AuditState {
         val overallRiskScore: Int,
         val complexityScoreOverall: Int,
         val realCostBreakdown: RealCostBreakdown?,
-        val negotiationDrafts: Map<String, String>
+        val negotiationDrafts: Map<String, String>,
+        val contractType: ContractType = ContractType.GENERAL_AGREEMENT
     ) : AuditState()
     data class Error(val message: String) : AuditState()
 }
@@ -240,11 +242,26 @@ class MainViewModel(
                 val userCountry = preferenceManager.defaultCountry.first()
                 val userContractType = preferenceManager.defaultContractType.first()
 
+                // Policy: Classifier First, Manual Preference Fallback.
+                // The classifier is the authoritative source. If the classifier detects a specific category
+                // (RESIDENTIAL_LEASE, EMPLOYMENT_FREELANCE, MEMBERSHIP_SUBSCRIPTION) with high confidence,
+                // we trust the classifier. If it falls back to GENERAL_AGREEMENT due to low confidence or mixed signals,
+                // we consult the user's manual preference from Settings as a fallback override.
+                val classifiedType = legalAuditEngine.classifyContract(extractedText)
+                val manualType = ContractType.fromString(userContractType)
+                val effectiveContractType = if (classifiedType != ContractType.GENERAL_AGREEMENT) {
+                    classifiedType
+                } else if (manualType != ContractType.GENERAL_AGREEMENT) {
+                    manualType
+                } else {
+                    ContractType.GENERAL_AGREEMENT
+                }
+
                 _uiState.value = AuditState.Analyzing
                 val result = legalAuditEngine.analyzeContract(
                     rawText = extractedText,
                     country = userCountry,
-                    contractType = userContractType
+                    contractType = effectiveContractType
                 )
                 val calculatedScore = result.overallRiskScore
 
@@ -252,7 +269,8 @@ class MainViewModel(
                     flag.displayName to com.example.engine.NegotiationTemplateEngine.generateDraft(
                         category = flag.displayName,
                         clauseText = flag.matchedSnippet.ifBlank { flag.explanation },
-                        isPro = isProUser.value
+                        isPro = isProUser.value,
+                        contractType = effectiveContractType
                     )
                 }
 
@@ -261,12 +279,12 @@ class MainViewModel(
                 val docTitle = if (firstCleanLine.length > 5) firstCleanLine else "Audited Contract"
                 val docId = UUID.randomUUID().toString()
 
-                // Persist full audit result to Room Database with user settings
+                // Persist full audit result to Room Database with resolved contract type
                 val docEntity = DocumentEntity(
                     id = docId,
                     title = docTitle,
                     country = userCountry,
-                    contractType = userContractType,
+                    contractType = effectiveContractType,
                     dateScanned = System.currentTimeMillis(),
                     pageCount = uris.size,
                     rawText = extractedText
@@ -321,7 +339,8 @@ class MainViewModel(
                     overallRiskScore = calculatedScore,
                     complexityScoreOverall = 0,
                     realCostBreakdown = null,
-                    negotiationDrafts = drafts
+                    negotiationDrafts = drafts,
+                    contractType = effectiveContractType
                 )
             } catch (e: Exception) {
                 _uiState.value = AuditState.Error(e.localizedMessage ?: "Unknown error occurred")
@@ -355,11 +374,26 @@ class MainViewModel(
                 val userCountry = preferenceManager.defaultCountry.first()
                 val userContractType = preferenceManager.defaultContractType.first()
 
+                // Policy: Classifier First, Manual Preference Fallback.
+                // The classifier is the authoritative source. If the classifier detects a specific category
+                // (RESIDENTIAL_LEASE, EMPLOYMENT_FREELANCE, MEMBERSHIP_SUBSCRIPTION) with high confidence,
+                // we trust the classifier. If it falls back to GENERAL_AGREEMENT due to low confidence or mixed signals,
+                // we consult the user's manual preference from Settings as a fallback override.
+                val classifiedType = legalAuditEngine.classifyContract(text)
+                val manualType = ContractType.fromString(userContractType)
+                val effectiveContractType = if (classifiedType != ContractType.GENERAL_AGREEMENT) {
+                    classifiedType
+                } else if (manualType != ContractType.GENERAL_AGREEMENT) {
+                    manualType
+                } else {
+                    ContractType.GENERAL_AGREEMENT
+                }
+
                 _uiState.value = AuditState.Analyzing
                 val result = legalAuditEngine.analyzeContract(
                     rawText = text,
                     country = userCountry,
-                    contractType = userContractType
+                    contractType = effectiveContractType
                 )
                 val calculatedScore = result.overallRiskScore
 
@@ -367,7 +401,8 @@ class MainViewModel(
                     flag.displayName to com.example.engine.NegotiationTemplateEngine.generateDraft(
                         category = flag.displayName,
                         clauseText = flag.matchedSnippet.ifBlank { flag.explanation },
-                        isPro = isProUser.value
+                        isPro = isProUser.value,
+                        contractType = effectiveContractType
                     )
                 }
 
@@ -376,7 +411,7 @@ class MainViewModel(
                     id = docId,
                     title = title,
                     country = userCountry,
-                    contractType = userContractType,
+                    contractType = effectiveContractType,
                     dateScanned = System.currentTimeMillis(),
                     pageCount = 1,
                     rawText = text
@@ -431,7 +466,8 @@ class MainViewModel(
                     overallRiskScore = calculatedScore,
                     complexityScoreOverall = 0,
                     realCostBreakdown = null,
-                    negotiationDrafts = drafts
+                    negotiationDrafts = drafts,
+                    contractType = effectiveContractType
                 )
             } catch (e: Exception) {
                 _uiState.value = AuditState.Error(e.localizedMessage ?: "Failed to analyze document")
@@ -481,7 +517,8 @@ class MainViewModel(
                     overallRiskScore = calculatedScore,
                     complexityScoreOverall = 0,
                     realCostBreakdown = null,
-                    negotiationDrafts = draftsMap
+                    negotiationDrafts = draftsMap,
+                    contractType = document.contractType
                 )
             } catch (e: Exception) {
                 _uiState.value = AuditState.Error("Failed to load saved document: ${e.localizedMessage}")
@@ -499,6 +536,7 @@ class MainViewModel(
         val currentResult = _uiState.value as? AuditState.Result ?: return null
         return pdfExportEngine.generateAuditReport(
             documentTitle = currentResult.documentTitle,
+            contractType = currentResult.contractType,
             isHighRisk = currentResult.isHighRisk,
             riskScore = currentResult.overallRiskScore,
             redFlags = currentResult.matchedRedFlags,

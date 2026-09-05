@@ -4,13 +4,14 @@ import androidx.room.Entity
 import androidx.room.ForeignKey
 import androidx.room.Index
 import androidx.room.PrimaryKey
+import com.example.engine.ContractType
 
 @Entity(tableName = "documents")
 data class DocumentEntity(
     @PrimaryKey val id: String,
     val title: String,
     val country: String,          // e.g. "US", "UK", "IN"
-    val contractType: String,     // "lease" | "freelance"
+    val contractType: ContractType, // Strong ContractType enum
     val dateScanned: Long,
     val pageCount: Int,
     val rawText: String

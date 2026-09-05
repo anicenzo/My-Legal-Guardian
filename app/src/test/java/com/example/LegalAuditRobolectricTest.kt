@@ -3,6 +3,7 @@ package com.example
 import android.content.Context
 import androidx.test.core.app.ApplicationProvider
 import com.example.data.db.DocumentEntity
+import com.example.engine.ContractType
 import com.example.engine.LegalAuditEngine
 import kotlinx.coroutines.runBlocking
 import org.junit.Assert.assertEquals
@@ -69,18 +70,18 @@ class LegalAuditRobolectricTest {
         val result = engine.analyzeContract(
             rawText = sampleFreelanceContract,
             country = "US",
-            contractType = "freelance"
+            contractType = ContractType.EMPLOYMENT_FREELANCE
         )
 
         // Must evaluate freelance safeguards, NOT lease safeguards
         val missing = result.missingMandatoryClauses
         assertTrue(
-            "Must flag missing freelance payment terms",
-            missing.contains("Payment Terms / Late Payment Fee")
+            "Must flag missing freelance payment schedule",
+            missing.contains("Clear Payment Schedule")
         )
         assertTrue(
             "Must flag missing IP assignment upon payment safeguard",
-            missing.contains("IP Ownership Assigned Upon Payment")
+            missing.contains("IP Retention Until Payment")
         )
         assertTrue(
             "Must flag missing liability cap safeguard",
@@ -110,7 +111,7 @@ class LegalAuditRobolectricTest {
         val result = engine.analyzeContract(
             rawText = predatoryFreelanceText,
             country = "US",
-            contractType = "freelance"
+            contractType = ContractType.EMPLOYMENT_FREELANCE
         )
 
         val categories = result.matchedRedFlags.map { it.category }
@@ -126,13 +127,13 @@ class LegalAuditRobolectricTest {
             id = "test-doc-123",
             title = "Consulting Agreement",
             country = "UK",
-            contractType = "freelance",
+            contractType = com.example.engine.ContractType.EMPLOYMENT_FREELANCE,
             dateScanned = System.currentTimeMillis(),
             pageCount = 2,
             rawText = "sample contract text"
         )
 
         assertEquals("UK", doc.country)
-        assertEquals("freelance", doc.contractType)
+        assertEquals(com.example.engine.ContractType.EMPLOYMENT_FREELANCE, doc.contractType)
     }
 }

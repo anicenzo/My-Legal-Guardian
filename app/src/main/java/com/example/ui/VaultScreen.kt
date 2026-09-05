@@ -266,7 +266,7 @@ fun VaultDocumentCard(
             )
             Spacer(modifier = Modifier.height(3.dp))
             Text(
-                text = "$formattedDate  ·  ${document.pageCount} ${if (document.pageCount == 1) "page" else "pages"}",
+                text = "${document.contractType.displayName}  ·  $formattedDate  ·  ${document.pageCount} ${if (document.pageCount == 1) "page" else "pages"}",
                 style = LGType.Caption,
                 color = colors.TextTertiary
             )

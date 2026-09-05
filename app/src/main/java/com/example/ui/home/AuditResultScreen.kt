@@ -30,8 +30,10 @@ import androidx.compose.ui.platform.LocalContext
 import androidx.compose.ui.platform.LocalHapticFeedback
 import androidx.compose.ui.text.AnnotatedString
 import androidx.compose.ui.text.font.FontWeight
+import androidx.compose.ui.text.style.TextOverflow
 import androidx.compose.ui.unit.dp
 import androidx.compose.ui.unit.sp
+import com.example.engine.ContractType
 import com.example.engine.NegotiationTemplateEngine
 import com.example.ui.AuditState
 import com.example.ui.MainViewModel
@@ -85,6 +87,21 @@ fun AuditResultScreen(
                 horizontalAlignment = Alignment.CenterHorizontally,
                 modifier = Modifier.fillMaxWidth()
             ) {
+                Text(
+                    text = audit.documentTitle,
+                    style = LGType.Heading.copy(fontWeight = FontWeight.SemiBold, fontSize = 16.sp),
+                    color = colors.TextPrimary,
+                    maxLines = 1,
+                    overflow = TextOverflow.Ellipsis
+                )
+                Spacer(modifier = Modifier.height(2.dp))
+                Text(
+                    text = "Detected: ${audit.contractType.displayName}",
+                    style = LGType.Caption,
+                    color = colors.TextTertiary
+                )
+                Spacer(modifier = Modifier.height(14.dp))
+
                 // Grade pill
                 LGBadge(
                     text = riskGrade(score),

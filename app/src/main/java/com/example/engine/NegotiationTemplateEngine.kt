@@ -155,16 +155,34 @@ object NegotiationTemplateEngine {
     }
 
     /**
-     * Generates a negotiation draft email text based on the category and isPro status.
+     * Resolves the appropriate salutation for the contract category.
      */
-    fun generateDraft(category: String?, clauseText: String, isPro: Boolean = true): String {
+    fun getSalutation(contractType: ContractType): String = when (contractType) {
+        ContractType.RESIDENTIAL_LEASE -> "Dear [Landlord / Property Manager],"
+        ContractType.EMPLOYMENT_FREELANCE -> "Dear [Client / Hiring Manager],"
+        ContractType.MEMBERSHIP_SUBSCRIPTION -> "Dear [Service Provider / Management],"
+        ContractType.GENERAL_AGREEMENT -> "To Whom It May Concern,"
+    }
+
+    /**
+     * Generates a negotiation draft email text based on the category, isPro status, and contractType.
+     */
+    fun generateDraft(
+        category: String?,
+        clauseText: String,
+        isPro: Boolean = true,
+        contractType: ContractType = ContractType.GENERAL_AGREEMENT
+    ): String {
         val baseTemplate = if (isPro) {
             resolveTemplate(category)
         } else {
             genericTemplate
         }
 
+        val salutation = getSalutation(contractType)
+
         return baseTemplate
+            .replace("Dear [Name],", salutation)
             .replace("[CLAUSE_TEXT]", clauseText)
             .replace("[Name]", "Partner / Landlord")
             .replace("[Your Name]", "Contract Signee")
@@ -173,7 +191,11 @@ object NegotiationTemplateEngine {
     /**
      * Generates a complete combined email for multiple selected red flag clauses.
      */
-    fun generateCombinedEmail(selectedFlags: List<MatchedRedFlag>, isPro: Boolean = true): String {
+    fun generateCombinedEmail(
+        selectedFlags: List<MatchedRedFlag>,
+        isPro: Boolean = true,
+        contractType: ContractType = ContractType.GENERAL_AGREEMENT
+    ): String {
         if (selectedFlags.isEmpty()) return ""
 
         val clausePoints = selectedFlags.joinToString("\n\n") { flag ->
@@ -181,10 +203,12 @@ object NegotiationTemplateEngine {
             "• ${flag.displayName}:${snippet}\n   Concern: ${flag.explanation}"
         }
 
+        val salutation = getSalutation(contractType)
+
         return """
 Subject: Proposed Amendments to Contract Draft
 
-Dear Landlord / Property Manager,
+$salutation
 
 I am currently reviewing our proposed contract draft. Before proceeding with signing, I would like to request clarification and standard mutual adjustments regarding the following provisions:
 
