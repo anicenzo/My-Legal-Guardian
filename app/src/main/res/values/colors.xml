@@ -1,15 +1,17 @@
 <?xml version="1.0" encoding="utf-8"?>
 <resources>
     <!-- Legal AI — Dark-Only Color Palette -->
-    <color name="dark_background">#FF0A0B0D</color>
-    <color name="dark_surface">#FF121317</color>
-    <color name="dark_surface_elevated">#FF1A1C21</color>
-    <color name="dark_border">#FF262932</color>
-    <color name="cobalt_accent">#FF5B7CFA</color>
-    <color name="risk_high">#FFD9695A</color>
-    <color name="risk_medium">#FFD1A24D</color>
-    <color name="risk_low">#FF6FA383</color>
-    <color name="text_primary">#FFEDEDEF</color>
-    <color name="text_secondary">#FF9498A3</color>
+    <color name="dark_background">#FF090B0E</color>
+    <color name="splash_background">#FF0E1A32</color>
+    <color name="dark_surface">#FF131720</color>
+    <color name="dark_surface_elevated">#FF1B212D</color>
+    <color name="dark_border">#FF222B3A</color>
+    <color name="cobalt_accent">#FF2F6FED</color>
+    <color name="accent_muted">#FF16233F</color>
+    <color name="risk_high">#FFF43F5E</color>
+    <color name="risk_medium">#FFF59E0B</color>
+    <color name="risk_low">#FF10B981</color>
+    <color name="text_primary">#FFF1F4F8</color>
+    <color name="text_secondary">#FF94A3B8</color>
     <color name="black">#FF000000</color>
 </resources>

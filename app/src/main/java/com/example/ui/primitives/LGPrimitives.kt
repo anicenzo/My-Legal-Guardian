@@ -25,10 +25,13 @@ import androidx.compose.ui.draw.alpha
 import androidx.compose.ui.draw.clip
 import androidx.compose.ui.draw.scale
 import androidx.compose.ui.focus.onFocusChanged
+import androidx.compose.ui.geometry.Offset
 import androidx.compose.ui.graphics.Brush
 import androidx.compose.ui.graphics.Color
+import androidx.compose.ui.graphics.Path
 import androidx.compose.ui.graphics.SolidColor
 import androidx.compose.ui.graphics.StrokeCap
+import androidx.compose.ui.graphics.StrokeJoin
 import androidx.compose.ui.graphics.drawscope.Stroke
 import androidx.compose.ui.graphics.vector.ImageVector
 import androidx.compose.ui.platform.testTag
@@ -486,6 +489,121 @@ fun LGTextField(
             textStyle = LGType.Body.copy(color = colors.TextPrimary),
             cursorBrush = SolidColor(colors.Accent),
             modifier = Modifier.fillMaxWidth()
+        )
+    }
+}
+
+// ── Custom Monoline Inspection Icon (Document + Inspection Motif) ───────────
+@Composable
+fun InspectionDocumentIcon(
+    modifier: Modifier = Modifier,
+    tint: Color = LocalLGColors.current.Accent
+) {
+    Canvas(modifier = modifier.size(18.dp)) {
+        val w = size.width
+        val h = size.height
+        val strokeW = 1.4.dp.toPx()
+
+        // Document outline with folded top-right dog-ear
+        val docPath = Path().apply {
+            moveTo(w * 0.16f, h * 0.90f)
+            lineTo(w * 0.16f, h * 0.12f)
+            lineTo(w * 0.54f, h * 0.12f)
+            lineTo(w * 0.74f, h * 0.32f)
+            lineTo(w * 0.74f, h * 0.56f)
+            moveTo(w * 0.38f, h * 0.90f)
+            lineTo(w * 0.16f, h * 0.90f)
+        }
+        drawPath(
+            path = docPath,
+            color = tint,
+            style = Stroke(width = strokeW, cap = StrokeCap.Round, join = StrokeJoin.Round)
+        )
+
+        // Fold inner triangle
+        val foldPath = Path().apply {
+            moveTo(w * 0.54f, h * 0.12f)
+            lineTo(w * 0.54f, h * 0.32f)
+            lineTo(w * 0.74f, h * 0.32f)
+        }
+        drawPath(
+            path = foldPath,
+            color = tint,
+            style = Stroke(width = strokeW, cap = StrokeCap.Round, join = StrokeJoin.Round)
+        )
+
+        // Monoline document text lines
+        drawLine(
+            color = tint.copy(alpha = 0.75f),
+            start = Offset(w * 0.28f, h * 0.42f),
+            end = Offset(w * 0.62f, h * 0.42f),
+            strokeWidth = strokeW * 0.9f,
+            cap = StrokeCap.Round
+        )
+        drawLine(
+            color = tint.copy(alpha = 0.75f),
+            start = Offset(w * 0.28f, h * 0.56f),
+            end = Offset(w * 0.46f, h * 0.56f),
+            strokeWidth = strokeW * 0.9f,
+            cap = StrokeCap.Round
+        )
+
+        // Overlapping inspection magnifying glass at bottom-right
+        val lensCenter = Offset(w * 0.66f, h * 0.72f)
+        val lensRadius = w * 0.18f
+        drawCircle(
+            color = tint,
+            radius = lensRadius,
+            center = lensCenter,
+            style = Stroke(width = strokeW, cap = StrokeCap.Round)
+        )
+        // Magnifying glass handle
+        drawLine(
+            color = tint,
+            start = Offset(lensCenter.x + lensRadius * 0.707f, lensCenter.y + lensRadius * 0.707f),
+            end = Offset(w * 0.92f, h * 0.98f),
+            strokeWidth = strokeW * 1.25f,
+            cap = StrokeCap.Round
+        )
+    }
+}
+
+// ── Subtle Monoline Info Icon (Thin Outline Affordance) ──────────────────────
+@Composable
+fun LGMonolineInfoIcon(
+    modifier: Modifier = Modifier,
+    tint: Color = LocalLGColors.current.TextTertiary
+) {
+    Canvas(modifier = modifier.size(18.dp)) {
+        val w = size.width
+        val h = size.height
+        val strokeW = 1.25.dp.toPx()
+        val center = Offset(w / 2f, h / 2f)
+        val radius = (minOf(w, h) - strokeW) / 2f
+
+        // Thin outer circle outline
+        drawCircle(
+            color = tint,
+            radius = radius,
+            center = center,
+            style = Stroke(width = strokeW)
+        )
+
+        // Dot at top
+        val dotRadius = strokeW * 0.75f
+        drawCircle(
+            color = tint,
+            radius = dotRadius,
+            center = Offset(center.x, center.y - radius * 0.40f)
+        )
+
+        // Vertical stem of "i"
+        drawLine(
+            color = tint,
+            start = Offset(center.x, center.y - radius * 0.10f),
+            end = Offset(center.x, center.y + radius * 0.48f),
+            strokeWidth = strokeW,
+            cap = StrokeCap.Round
         )
     }
 }

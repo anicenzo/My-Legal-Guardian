@@ -7,6 +7,8 @@ import androidx.compose.foundation.background
 import androidx.compose.foundation.border
 import androidx.compose.foundation.layout.*
 import androidx.compose.foundation.shape.RoundedCornerShape
+import androidx.compose.material.icons.Icons
+import androidx.compose.material.icons.filled.Check
 import androidx.compose.material3.*
 import androidx.compose.runtime.*
 import androidx.compose.ui.Alignment
@@ -83,7 +85,11 @@ private fun PaywallContent(
         Row(verticalAlignment = Alignment.CenterVertically) {
             Text("Legal AI Pro", style = LGType.Title.copy(fontWeight = FontWeight.Bold), color = colors.TextPrimary)
             Spacer(modifier = Modifier.width(8.dp))
-            LGBadge(text = "UNLIMITED", color = colors.Accent)
+            Text(
+                text = "UNLIMITED",
+                style = LGType.Caption.copy(fontWeight = FontWeight.Bold, letterSpacing = 0.8.sp),
+                color = colors.Accent
+            )
         }
         Spacer(modifier = Modifier.height(4.dp))
         Text(
@@ -118,11 +124,20 @@ private fun PaywallContent(
                 color = colors.TextPrimary
             )
             Spacer(modifier = Modifier.height(10.dp))
-            Text(
-                text = "✓ Caught $2,400 potential loss & generated negotiation amendment",
-                style = LGType.Caption.copy(fontWeight = FontWeight.SemiBold),
-                color = colors.RiskLow
-            )
+            Row(verticalAlignment = Alignment.CenterVertically) {
+                Icon(
+                    imageVector = Icons.Filled.Check,
+                    contentDescription = null,
+                    tint = colors.RiskLow,
+                    modifier = Modifier.size(15.dp)
+                )
+                Spacer(modifier = Modifier.width(6.dp))
+                Text(
+                    text = "Caught $2,400 potential loss & generated negotiation amendment",
+                    style = LGType.Caption.copy(fontWeight = FontWeight.SemiBold),
+                    color = colors.RiskLow
+                )
+            }
         }
 
         Spacer(modifier = Modifier.height(20.dp))
@@ -142,10 +157,11 @@ private fun PaywallContent(
                     .padding(vertical = 4.dp),
                 verticalAlignment = Alignment.CenterVertically
             ) {
-                Text(
-                    text = "✓",
-                    style = LGType.Body.copy(fontWeight = FontWeight.Bold),
-                    color = colors.Accent
+                Icon(
+                    imageVector = Icons.Filled.Check,
+                    contentDescription = null,
+                    tint = colors.RiskLow,
+                    modifier = Modifier.size(16.dp)
                 )
                 Spacer(modifier = Modifier.width(10.dp))
                 Text(
@@ -182,7 +198,7 @@ private fun PaywallContent(
                 Text(
                     text = proPrice ?: "$4.99/mo",
                     style = LGType.Title.copy(fontWeight = FontWeight.Bold),
-                    color = colors.Accent
+                    color = colors.TextPrimary
                 )
             }
         }

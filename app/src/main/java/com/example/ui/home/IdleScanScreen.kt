@@ -96,16 +96,13 @@ fun IdleScanScreen(
             )
 
             if (isProUser) {
-                LGBadge(text = "PRO UNLIMITED", color = colors.Accent, showDot = true)
+                Text(
+                    text = "PRO UNLIMITED",
+                    style = LGType.Caption.copy(fontWeight = FontWeight.Bold, letterSpacing = 0.8.sp),
+                    color = colors.Accent
+                )
             } else {
-                Row(
-                    verticalAlignment = Alignment.CenterVertically,
-                    modifier = Modifier
-                        .clip(RoundedCornerShape(100.dp))
-                        .background(colors.Surface)
-                        .border(BorderStroke(1.dp, colors.Border), RoundedCornerShape(100.dp))
-                        .padding(horizontal = 10.dp, vertical = 4.dp)
-                ) {
+                Row(verticalAlignment = Alignment.CenterVertically) {
                     Box(
                         modifier = Modifier
                             .size(6.dp)
@@ -117,7 +114,7 @@ fun IdleScanScreen(
                     Spacer(modifier = Modifier.width(6.dp))
                     Text(
                         text = "$freeScansRemaining / 3 Free",
-                        style = LGType.Caption.copy(fontWeight = FontWeight.SemiBold),
+                        style = LGType.Caption.copy(fontWeight = FontWeight.Medium),
                         color = if (freeScansRemaining > 0) colors.TextSecondary else colors.RiskHigh
                     )
                 }
@@ -223,9 +220,7 @@ fun IdleScanScreen(
                             .background(colors.AccentMuted, RoundedCornerShape(8.dp)),
                         contentAlignment = Alignment.Center
                     ) {
-                        Icon(
-                            imageVector = Icons.Filled.AutoAwesome,
-                            contentDescription = "Sample audit demo",
+                        InspectionDocumentIcon(
                             tint = colors.Accent,
                             modifier = Modifier.size(18.dp)
                         )
@@ -236,26 +231,16 @@ fun IdleScanScreen(
                         style = LGType.BodyMedium.copy(fontWeight = FontWeight.SemiBold),
                         color = colors.TextPrimary
                     )
-                    Spacer(modifier = Modifier.width(10.dp))
-                    Box(
-                        modifier = Modifier
-                            .clip(RoundedCornerShape(6.dp))
-                            .background(colors.AccentMuted)
-                            .border(BorderStroke(1.dp, colors.Accent.copy(alpha = 0.4f)), RoundedCornerShape(6.dp))
-                            .padding(horizontal = 8.dp, vertical = 2.dp)
-                    ) {
-                        Text(
-                            text = "TRY",
-                            style = LGType.Caption.copy(
-                                fontWeight = FontWeight.Bold,
-                                fontSize = 10.sp,
-                                letterSpacing = 0.5.sp
-                            ),
-                            color = colors.Accent,
-                            maxLines = 1,
-                            softWrap = false
-                        )
-                    }
+                    Spacer(modifier = Modifier.width(8.dp))
+                    Text(
+                        text = "TRY",
+                        style = LGType.Caption.copy(
+                            fontWeight = FontWeight.Bold,
+                            fontSize = 11.sp,
+                            letterSpacing = 0.8.sp
+                        ),
+                        color = colors.Accent
+                    )
                 }
                 Icon(
                     imageVector = Icons.Filled.ChevronRight,

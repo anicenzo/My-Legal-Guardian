@@ -24,8 +24,8 @@ object LGColorsDark {
     val TextTertiary  = Color(0xFF7B8BA6)     // Slate tertiary (timestamps, metadata) - WCAG AA 5.8:1
 
     // ── Interactive Accents ──────────────────────────────────────────────────
-    val Accent        = Color(0xFF6366F1)     // Electric Indigo
-    val AccentMuted   = Color(0xFF232847)     // Indigo tint (for tabs/pills)
+    val Accent        = Color(0xFF2F6FED)     // Clean Cobalt Blue (zero violet undertone)
+    val AccentMuted   = Color(0xFF16233F)     // Desaturated Brand Navy (for tabs/active containers)
     val PrimaryHero   = Color(0xFFF8FAFC)     // Titanium White (hero CTA background)
     val OnPrimaryHero = Color(0xFF090B0E)     // Deep obsidian (hero CTA text)
 

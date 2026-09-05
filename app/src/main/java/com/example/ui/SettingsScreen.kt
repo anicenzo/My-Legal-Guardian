@@ -100,7 +100,7 @@ fun SettingsScreen(
                         contentAlignment = Alignment.Center
                     ) {
                         Icon(
-                            imageVector = if (isProUser) Icons.Filled.Star else Icons.Filled.Shield,
+                            imageVector = if (isProUser) Icons.Filled.Verified else Icons.Filled.Shield,
                             contentDescription = "Membership status",
                             tint = if (isProUser) colors.RiskLow else colors.TextSecondary,
                             modifier = Modifier.size(24.dp)

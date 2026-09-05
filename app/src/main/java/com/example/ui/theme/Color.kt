@@ -18,8 +18,8 @@ val DarkOnSurface       = Color(0xFFF1F4F8)
 val DarkOnSurfaceVar    = Color(0xFF94A3B8)
 
 // Accent
-val CobaltAccent        = Color(0xFF6366F1)
-val CobaltContainer     = Color(0xFF232847)
+val CobaltAccent        = Color(0xFF2F6FED)
+val CobaltContainer     = Color(0xFF16233F)
 
 // Risk
 val RiskHighColor       = Color(0xFFF43F5E)

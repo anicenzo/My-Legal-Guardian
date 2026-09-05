@@ -37,6 +37,7 @@ import com.example.ui.primitives.LGButtonVariant
 import com.example.ui.primitives.LGSpacing
 import com.example.ui.primitives.LGType
 import com.example.ui.primitives.LocalLGColors
+import com.example.ui.primitives.LGMonolineInfoIcon
 import com.google.mlkit.vision.documentscanner.GmsDocumentScanningResult
 
 @OptIn(ExperimentalMaterial3Api::class)
@@ -148,11 +149,9 @@ fun HomeScreen(
                         onClick = { showInfoSheet = true },
                         modifier = Modifier.size(36.dp)
                     ) {
-                        Icon(
-                            imageVector = Icons.Filled.Info,
-                            contentDescription = "What Legal AI Monitors",
+                        LGMonolineInfoIcon(
                             tint = colors.TextTertiary,
-                            modifier = Modifier.size(20.dp)
+                            modifier = Modifier.size(18.dp)
                         )
                     }
                 }

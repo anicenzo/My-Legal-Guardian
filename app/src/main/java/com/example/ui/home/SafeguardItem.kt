@@ -18,7 +18,7 @@ import androidx.compose.foundation.layout.*
 import androidx.compose.foundation.shape.RoundedCornerShape
 import androidx.compose.material.icons.Icons
 import androidx.compose.material.icons.filled.Warning
-import androidx.compose.material.icons.rounded.Info
+import com.example.ui.primitives.LGMonolineInfoIcon
 import androidx.compose.material3.Icon
 import androidx.compose.material3.Text
 import androidx.compose.runtime.*
@@ -99,11 +99,9 @@ fun SafeguardExpandableItem(clause: String) {
                 modifier = Modifier.weight(1f)
             )
             Spacer(modifier = Modifier.width(8.dp))
-            Icon(
-                imageVector = Icons.Rounded.Info,
-                contentDescription = if (expanded) "Collapse explanation" else "Show explanation",
+            LGMonolineInfoIcon(
                 tint = if (expanded) colors.TextPrimary else colors.TextTertiary,
-                modifier = Modifier.size(18.dp)
+                modifier = Modifier.size(16.dp)
             )
         }
 
