@@ -1,6 +1,6 @@
-# My Legal Guardian: Offline AI
+# Legal AI: Offline Contract Scan
 
-**My Legal Guardian** is a privacy-first, on-device legal contract scanner and risk analyzer for Android. Built with Kotlin, Jetpack Compose, Room Database, Google ML Kit, and TensorFlow Lite, it audits residential leases, NDAs, employment contracts, and freelance agreements 100% offline without sending sensitive contract documents to cloud servers.
+**Legal AI: Offline Contract Scan** is a privacy-first, on-device legal contract scanner and risk analyzer for Android. Built with Kotlin, Jetpack Compose, Room Database, Google ML Kit, and TensorFlow Lite, it audits residential leases, NDAs, employment contracts, and freelance agreements 100% offline without sending sensitive contract documents to cloud servers.
 
 ---
 

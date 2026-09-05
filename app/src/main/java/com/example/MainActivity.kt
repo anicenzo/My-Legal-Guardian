@@ -9,6 +9,7 @@ import androidx.compose.foundation.layout.fillMaxSize
 import androidx.compose.foundation.layout.padding
 import androidx.compose.material3.Scaffold
 import androidx.compose.runtime.*
+import androidx.compose.runtime.saveable.rememberSaveable
 import androidx.compose.ui.Modifier
 import com.example.engine.LegalAuditEngine
 import com.example.engine.ScannerEngine
@@ -20,15 +21,9 @@ import com.example.ui.VaultScreen
 import com.example.ui.primitives.LGBottomNav
 import com.example.ui.primitives.LocalLGColors
 import com.example.ui.theme.MyLegalGuardianTheme
-
 import androidx.fragment.app.FragmentActivity
 import androidx.lifecycle.ViewModelProvider
 import com.example.ui.MainViewModelFactory
-import androidx.navigation.NavGraph.Companion.findStartDestination
-import androidx.navigation.compose.NavHost
-import androidx.navigation.compose.composable
-import androidx.navigation.compose.currentBackStackEntryAsState
-import androidx.navigation.compose.rememberNavController
 
 class MainActivity : FragmentActivity() {
     private lateinit var viewModel: MainViewModel
@@ -46,10 +41,7 @@ class MainActivity : FragmentActivity() {
         viewModel = ViewModelProvider(this, factory)[MainViewModel::class.java]
 
         setContent {
-            // Dark-only: no isDarkMode state collection, no theme parameter
-            val navController = rememberNavController()
-            val navBackStackEntry by navController.currentBackStackEntryAsState()
-            val currentRoute = navBackStackEntry?.destination?.route ?: "scan"
+            var currentRoute by rememberSaveable { mutableStateOf("scan") }
             var showPaywall by remember { mutableStateOf(false) }
 
             MyLegalGuardianTheme {
@@ -64,20 +56,12 @@ class MainActivity : FragmentActivity() {
 
                 Scaffold(
                     modifier = Modifier.fillMaxSize(),
+                    containerColor = colors.Background,
+                    contentColor = colors.TextPrimary,
                     bottomBar = {
                         LGBottomNav(
                             selectedRoute = currentRoute,
-                            onNavigate = { route ->
-                                if (currentRoute != route) {
-                                    navController.navigate(route) {
-                                        popUpTo(navController.graph.findStartDestination().id) {
-                                            saveState = true
-                                        }
-                                        launchSingleTop = true
-                                        restoreState = true
-                                    }
-                                }
-                            }
+                            onNavigate = { route -> currentRoute = route }
                         )
                     }
                 ) { innerPadding ->
@@ -85,28 +69,19 @@ class MainActivity : FragmentActivity() {
                         modifier = Modifier
                             .fillMaxSize()
                             .background(colors.Background)
-                            .padding(innerPadding)
+                            .padding(bottom = innerPadding.calculateBottomPadding())
                     ) {
-                        NavHost(
-                            navController = navController,
-                            startDestination = "scan"
-                        ) {
-                            composable("scan") {
-                                HomeScreen(viewModel = viewModel)
-                            }
-                            composable("vault") {
-                                VaultScreen(
-                                    viewModel = viewModel,
-                                    onOpenDocument = { navController.navigate("scan") },
-                                    onScanClick = { navController.navigate("scan") }
-                                )
-                            }
-                            composable("settings") {
-                                SettingsScreen(
-                                    viewModel = viewModel,
-                                    onPurchaseClick = { showPaywall = true }
-                                )
-                            }
+                        when (currentRoute) {
+                            "scan" -> HomeScreen(viewModel = viewModel)
+                            "vault" -> VaultScreen(
+                                viewModel = viewModel,
+                                onOpenDocument = { currentRoute = "scan" },
+                                onScanClick = { currentRoute = "scan" }
+                            )
+                            "settings" -> SettingsScreen(
+                                viewModel = viewModel,
+                                onPurchaseClick = { showPaywall = true }
+                            )
                         }
                     }
                 }
@@ -114,3 +89,4 @@ class MainActivity : FragmentActivity() {
         }
     }
 }
+

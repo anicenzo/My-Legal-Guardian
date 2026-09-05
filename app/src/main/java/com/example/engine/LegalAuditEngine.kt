@@ -388,7 +388,10 @@ class LegalAuditEngine(private val context: Context) {
             val predatoryScore = output[0][1]
             return predatoryScore > 0.6f
         } catch (e: Exception) {
-            e.printStackTrace()
+            if (com.example.BuildConfig.DEBUG) {
+                android.util.Log.e("LegalAuditEngine", "TFLite inference failed: ${e.message}", e)
+            }
+            com.example.util.LocalErrorLogger.record(context, "LegalAuditEngine", "TFLite inference failed: ${e.message}", e)
         }
         
         return false

@@ -21,7 +21,7 @@ object LGColorsDark {
     // ── Text ─────────────────────────────────────────────────────────────────
     val TextPrimary   = Color(0xFFF1F4F8)     // High-contrast crisp white
     val TextSecondary = Color(0xFF94A3B8)     // Slate secondary
-    val TextTertiary  = Color(0xFF64748B)     // Slate tertiary (timestamps, metadata)
+    val TextTertiary  = Color(0xFF7B8BA6)     // Slate tertiary (timestamps, metadata) - WCAG AA 5.8:1
 
     // ── Interactive Accents ──────────────────────────────────────────────────
     val Accent        = Color(0xFF6366F1)     // Electric Indigo

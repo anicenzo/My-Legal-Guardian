@@ -144,16 +144,19 @@ fun VaultScreen(
 
         // ── Main Content ──────────────────────────────────────────────────────
         if (savedDocs.isEmpty()) {
-            // Empty state
+            // Empty state centered in available vertical space
             Box(
-                modifier = Modifier.fillMaxSize().padding(24.dp),
+                modifier = Modifier
+                    .fillMaxWidth()
+                    .weight(1f)
+                    .padding(horizontal = 24.dp),
                 contentAlignment = Alignment.Center
             ) {
                 Column(
                     modifier = Modifier
                         .fillMaxWidth()
-                        .background(colors.Surface, RoundedCornerShape(12.dp))
-                        .border(BorderStroke(1.dp, colors.Border), RoundedCornerShape(12.dp))
+                        .background(colors.Surface, RoundedCornerShape(14.dp))
+                        .border(BorderStroke(1.dp, colors.Border), RoundedCornerShape(14.dp))
                         .padding(32.dp),
                     horizontalAlignment = Alignment.CenterHorizontally
                 ) {
@@ -166,7 +169,7 @@ fun VaultScreen(
                     ) {
                         Icon(
                             imageVector = Icons.Filled.FolderOpen,
-                            contentDescription = null,
+                            contentDescription = "Empty vault",
                             tint = colors.TextTertiary,
                             modifier = Modifier.size(28.dp)
                         )
@@ -245,7 +248,7 @@ fun VaultDocumentCard(
         ) {
             Icon(
                 imageVector = Icons.Filled.Description,
-                contentDescription = null,
+                contentDescription = "Contract file",
                 tint = colors.TextSecondary,
                 modifier = Modifier.size(22.dp)
             )
@@ -272,7 +275,7 @@ fun VaultDocumentCard(
         IconButton(onClick = onDelete) {
             Icon(
                 imageVector = Icons.Filled.DeleteOutline,
-                contentDescription = "Delete",
+                contentDescription = "Delete document from vault",
                 tint = colors.TextTertiary
             )
         }

@@ -76,7 +76,7 @@ class PdfExportEngine(private val context: Context) {
         }
 
         // App & Document Header
-        canvas.drawText("My Legal Guardian — Confidential Audit Report", marginX, currentY, headerPaint)
+        canvas.drawText("Legal AI — Confidential Audit Report", marginX, currentY, headerPaint)
         currentY += 24f
         canvas.drawText("Document: $documentTitle", marginX, currentY, titlePaint)
         currentY += 28f
@@ -163,7 +163,7 @@ class PdfExportEngine(private val context: Context) {
         checkPageBreak(30f)
         canvas.drawLine(marginX, currentY, marginX + contentWidth, currentY, linePaint)
         currentY += 16f
-        canvas.drawText("Generated 100% offline & securely by My Legal Guardian (Anixium Studios).", marginX, currentY, quotePaint)
+        canvas.drawText("Generated 100% offline & securely by Legal AI — Contract Scanner (Anixium Studios).", marginX, currentY, quotePaint)
 
         pdfDocument.finishPage(page)
 
@@ -173,9 +173,13 @@ class PdfExportEngine(private val context: Context) {
             pdfDocument.close()
             FileProvider.getUriForFile(context, "${context.packageName}.fileprovider", file)
         } catch (e: Exception) {
-            e.printStackTrace()
+            if (com.example.BuildConfig.DEBUG) {
+                android.util.Log.e("PdfExportEngine", "Failed to export PDF: ${e.message}", e)
+            }
+            com.example.util.LocalErrorLogger.record(context, "PdfExportEngine", "Failed to export PDF: ${e.message}", e)
             pdfDocument.close()
             null
         }
     }
 }
+

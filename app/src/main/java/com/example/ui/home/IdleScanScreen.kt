@@ -27,8 +27,22 @@ import androidx.compose.ui.unit.sp
 import com.example.ui.primitives.*
 
 // ═══════════════════════════════════════════════════════════════════════════════
-// IDLE SCAN SCREEN — Modern Scanner Home Hub
+// IDLE SCAN SCREEN — De-cluttered Working Hub
 // ═══════════════════════════════════════════════════════════════════════════════
+
+data class SafeguardCategory(
+    val title: String,
+    val description: String
+)
+
+val LEGAL_AI_MONITORS_LIST = listOf(
+    SafeguardCategory("Auto-Renewal & Lock-Ins", "Flags indefinite extensions without written notice"),
+    SafeguardCategory("Uncapped Liability", "Catches one-sided indemnity and damage waivers"),
+    SafeguardCategory("Non-Refundable Deposits", "Detects unfair security deposit forfeiture clauses"),
+    SafeguardCategory("Surprise Termination Fees", "Identifies multi-month penalty charges"),
+    SafeguardCategory("Mandatory Arbitration", "Highlights forced arbitration and jury trial waivers"),
+    SafeguardCategory("Unilateral Modifications", "Catches clauses allowing terms to change without consent")
+)
 
 const val SAMPLE_LEASE_CONTRACT = """RESIDENTIAL LEASE AGREEMENT
 
@@ -54,50 +68,32 @@ fun IdleScanScreen(
     isProUser: Boolean,
     freeScansRemaining: Int,
     onScanClick: () -> Unit,
-    onImportPdfClick: () -> Unit,
+    onImportClick: () -> Unit,
     onPurchaseClick: () -> Unit,
-    onSampleScanClick: (sampleText: String, sampleTitle: String) -> Unit
+    onSampleScanClick: (sampleText: String, sampleTitle: String) -> Unit,
+    modifier: Modifier = Modifier
 ) {
     val colors = LocalLGColors.current
 
-    // Animated scanner beam in the viewfinder card
-    val infiniteTransition = rememberInfiniteTransition(label = "scannerBeam")
-    val beamOffsetFraction by infiniteTransition.animateFloat(
-        initialValue = 0.05f,
-        targetValue = 0.95f,
-        animationSpec = infiniteRepeatable(
-            animation = tween(durationMillis = 2400, easing = LinearEasing),
-            repeatMode = RepeatMode.Reverse
-        ),
-        label = "beamOffset"
-    )
-
     Column(
-        modifier = Modifier
+        modifier = modifier
             .fillMaxSize()
             .background(colors.Background)
             .verticalScroll(rememberScrollState())
             .padding(horizontal = 20.dp, vertical = 16.dp),
         horizontalAlignment = Alignment.CenterHorizontally
     ) {
-        // ── Top Status Pill / Quota ──────────────────────────────────────────
+        // ── Block 1: Merged Header Row (Title + Free-Scan Badge) ─────────────
         Row(
             modifier = Modifier.fillMaxWidth(),
             verticalAlignment = Alignment.CenterVertically,
             horizontalArrangement = Arrangement.SpaceBetween
         ) {
-            Column {
-                Text(
-                    text = "Contract Auditor",
-                    style = LGType.Title.copy(fontWeight = FontWeight.Bold),
-                    color = colors.TextPrimary
-                )
-                Text(
-                    text = "Offline AI Document Safeguard",
-                    style = LGType.Caption,
-                    color = colors.TextTertiary
-                )
-            }
+            Text(
+                text = "Contract Auditor",
+                style = LGType.Title.copy(fontWeight = FontWeight.Bold),
+                color = colors.TextPrimary
+            )
 
             if (isProUser) {
                 LGBadge(text = "PRO UNLIMITED", color = colors.Accent, showDot = true)
@@ -130,111 +126,47 @@ fun IdleScanScreen(
 
         Spacer(modifier = Modifier.height(20.dp))
 
-        // ── Interactive Viewfinder Card ──────────────────────────────────────
+        // ── Block 2: Flat Scan Preview Frame (Plain bordered rectangle) ───────
         Box(
             modifier = Modifier
                 .fillMaxWidth()
-                .height(210.dp)
-                .clip(RoundedCornerShape(18.dp))
-                .background(
-                    Brush.verticalGradient(
-                        listOf(colors.SurfaceElevated, colors.Surface)
-                    )
-                )
-                .border(BorderStroke(1.dp, colors.Border), RoundedCornerShape(18.dp))
-                .clickable { onScanClick() }
+                .height(180.dp)
+                .clip(RoundedCornerShape(14.dp))
+                .background(colors.Surface)
+                .border(BorderStroke(1.dp, colors.Border), RoundedCornerShape(14.dp))
+                .clickable(onClickLabel = "Align contract to scan") { onScanClick() }
                 .padding(20.dp),
             contentAlignment = Alignment.Center
         ) {
-            // Document outline & corner brackets inside card
-            Box(
-                modifier = Modifier
-                    .fillMaxSize()
-                    .border(BorderStroke(1.dp, colors.BorderSubtle), RoundedCornerShape(12.dp))
-                    .padding(16.dp)
+            Column(
+                horizontalAlignment = Alignment.CenterHorizontally,
+                verticalArrangement = Arrangement.Center
             ) {
-                // Moving scan beam line
                 Box(
                     modifier = Modifier
-                        .fillMaxWidth()
-                        .fillMaxHeight(0.015f)
-                        .align(Alignment.TopCenter)
-                        .offset(y = (beamOffsetFraction * 140).dp)
-                        .background(
-                            Brush.horizontalGradient(
-                                listOf(
-                                    Color.Transparent,
-                                    colors.Accent.copy(alpha = 0.8f),
-                                    Color.Transparent
-                                )
-                            )
-                        )
-                )
-
-                // Corner decorative marks
-                Box(
-                    modifier = Modifier
-                        .size(12.dp)
-                        .align(Alignment.TopStart)
-                        .border(BorderStroke(2.dp, colors.Accent), RoundedCornerShape(topStart = 4.dp))
-                )
-                Box(
-                    modifier = Modifier
-                        .size(12.dp)
-                        .align(Alignment.TopEnd)
-                        .border(BorderStroke(2.dp, colors.Accent), RoundedCornerShape(topEnd = 4.dp))
-                )
-                Box(
-                    modifier = Modifier
-                        .size(12.dp)
-                        .align(Alignment.BottomStart)
-                        .border(BorderStroke(2.dp, colors.Accent), RoundedCornerShape(bottomStart = 4.dp))
-                )
-                Box(
-                    modifier = Modifier
-                        .size(12.dp)
-                        .align(Alignment.BottomEnd)
-                        .border(BorderStroke(2.dp, colors.Accent), RoundedCornerShape(bottomEnd = 4.dp))
-                )
-
-                // Center Icon + Prompts
-                Column(
-                    modifier = Modifier.fillMaxSize(),
-                    horizontalAlignment = Alignment.CenterHorizontally,
-                    verticalArrangement = Arrangement.Center
+                        .size(52.dp)
+                        .background(colors.AccentMuted, CircleShape),
+                    contentAlignment = Alignment.Center
                 ) {
-                    Box(
-                        modifier = Modifier
-                            .size(52.dp)
-                            .background(colors.AccentMuted, CircleShape),
-                        contentAlignment = Alignment.Center
-                    ) {
-                        Icon(
-                            imageVector = Icons.Filled.DocumentScanner,
-                            contentDescription = "Scan Document",
-                            tint = colors.Accent,
-                            modifier = Modifier.size(28.dp)
-                        )
-                    }
-                    Spacer(modifier = Modifier.height(10.dp))
-                    Text(
-                        text = "Align Contract to Scan",
-                        style = LGType.Heading.copy(fontWeight = FontWeight.SemiBold),
-                        color = colors.TextPrimary
-                    )
-                    Spacer(modifier = Modifier.height(3.dp))
-                    Text(
-                        text = "Flags hidden liabilities, non-competes, & traps",
-                        style = LGType.Caption,
-                        color = colors.TextSecondary
+                    Icon(
+                        imageVector = Icons.Filled.DocumentScanner,
+                        contentDescription = "Scan Document",
+                        tint = colors.Accent,
+                        modifier = Modifier.size(28.dp)
                     )
                 }
+                Spacer(modifier = Modifier.height(12.dp))
+                Text(
+                    text = "Align contract to scan",
+                    style = LGType.Heading.copy(fontWeight = FontWeight.Medium),
+                    color = colors.TextPrimary
+                )
             }
         }
 
-        Spacer(modifier = Modifier.height(18.dp))
+        Spacer(modifier = Modifier.height(20.dp))
 
-        // ── Primary & Secondary Action CTAs ──────────────────────────────────
+        // ── Block 3: Primary & Secondary Action CTAs ──────────────────────────
         if (!isProUser && freeScansRemaining == 0) {
             LGButton(
                 text = "Unlock Unlimited Scans",
@@ -253,19 +185,19 @@ fun IdleScanScreen(
             )
         }
 
-        Spacer(modifier = Modifier.height(10.dp))
+        Spacer(modifier = Modifier.height(12.dp))
 
         LGButton(
-            text = "Import PDF Contract",
-            icon = Icons.Filled.PictureAsPdf,
-            onClick = onImportPdfClick,
+            text = "Import Document",
+            icon = Icons.Filled.FileOpen,
+            onClick = onImportClick,
             variant = LGButtonVariant.Secondary,
             modifier = Modifier.fillMaxWidth()
         )
 
-        Spacer(modifier = Modifier.height(22.dp))
+        Spacer(modifier = Modifier.height(20.dp))
 
-        // ── Quick Demo / Instant Sample Contract Card ────────────────────────
+        // ── Block 4: Try Sample Audit Row (Compact single line) ───────────────
         LGSurface(
             modifier = Modifier.fillMaxWidth(),
             elevated = false,
@@ -276,38 +208,54 @@ fun IdleScanScreen(
         ) {
             Row(
                 verticalAlignment = Alignment.CenterVertically,
-                modifier = Modifier.fillMaxWidth()
+                modifier = Modifier
+                    .fillMaxWidth()
+                    .padding(vertical = 4.dp),
+                horizontalArrangement = Arrangement.SpaceBetween
             ) {
-                Box(
-                    modifier = Modifier
-                        .size(38.dp)
-                        .background(colors.AccentMuted, RoundedCornerShape(10.dp)),
-                    contentAlignment = Alignment.Center
+                Row(
+                    verticalAlignment = Alignment.CenterVertically,
+                    modifier = Modifier.weight(1f)
                 ) {
-                    Icon(
-                        imageVector = Icons.Filled.AutoAwesome,
-                        contentDescription = null,
-                        tint = colors.Accent,
-                        modifier = Modifier.size(20.dp)
-                    )
-                }
-                Spacer(modifier = Modifier.width(14.dp))
-                Column(modifier = Modifier.weight(1f)) {
-                    Row(verticalAlignment = Alignment.CenterVertically) {
-                        Text(
-                            text = "Try Sample Contract Audit",
-                            style = LGType.Subheading.copy(fontWeight = FontWeight.SemiBold),
-                            color = colors.TextPrimary
+                    Box(
+                        modifier = Modifier
+                            .size(32.dp)
+                            .background(colors.AccentMuted, RoundedCornerShape(8.dp)),
+                        contentAlignment = Alignment.Center
+                    ) {
+                        Icon(
+                            imageVector = Icons.Filled.AutoAwesome,
+                            contentDescription = "Sample audit demo",
+                            tint = colors.Accent,
+                            modifier = Modifier.size(18.dp)
                         )
-                        Spacer(modifier = Modifier.width(8.dp))
-                        LGBadge(text = "DEMO", color = colors.Accent)
                     }
-                    Spacer(modifier = Modifier.height(2.dp))
+                    Spacer(modifier = Modifier.width(12.dp))
                     Text(
-                        text = "Instant analysis of a high-liability apartment lease",
-                        style = LGType.Caption,
-                        color = colors.TextSecondary
+                        text = "Try Sample Audit",
+                        style = LGType.BodyMedium.copy(fontWeight = FontWeight.SemiBold),
+                        color = colors.TextPrimary
                     )
+                    Spacer(modifier = Modifier.width(10.dp))
+                    Box(
+                        modifier = Modifier
+                            .clip(RoundedCornerShape(6.dp))
+                            .background(colors.AccentMuted)
+                            .border(BorderStroke(1.dp, colors.Accent.copy(alpha = 0.4f)), RoundedCornerShape(6.dp))
+                            .padding(horizontal = 8.dp, vertical = 2.dp)
+                    ) {
+                        Text(
+                            text = "TRY",
+                            style = LGType.Caption.copy(
+                                fontWeight = FontWeight.Bold,
+                                fontSize = 10.sp,
+                                letterSpacing = 0.5.sp
+                            ),
+                            color = colors.Accent,
+                            maxLines = 1,
+                            softWrap = false
+                        )
+                    }
                 }
                 Icon(
                     imageVector = Icons.Filled.ChevronRight,
@@ -318,79 +266,7 @@ fun IdleScanScreen(
             }
         }
 
-        Spacer(modifier = Modifier.height(22.dp))
-
-        // ── Protection Capabilities Grid ─────────────────────────────────────
-        Column(modifier = Modifier.fillMaxWidth()) {
-            Text(
-                text = "WHAT LEGAL AI MONITORS",
-                style = LGType.Caption.copy(fontWeight = FontWeight.Bold, letterSpacing = 1.sp),
-                color = colors.TextTertiary
-            )
-            Spacer(modifier = Modifier.height(10.dp))
-
-            val items = listOf(
-                Pair("Auto-Renewal & Lock-Ins", "Flags indefinite extensions without written notice"),
-                Pair("Uncapped Liability", "Catches one-sided indemnity and damage waivers"),
-                Pair("Non-Refundable Deposits", "Detects unfair security deposit forfeiture clauses"),
-                Pair("Surprise Termination Fees", "Identifies multi-month penalty charges")
-            )
-
-            items.forEach { (title, subtitle) ->
-                Row(
-                    modifier = Modifier
-                        .fillMaxWidth()
-                        .padding(vertical = 6.dp),
-                    verticalAlignment = Alignment.CenterVertically
-                ) {
-                    Icon(
-                        imageVector = Icons.Filled.CheckCircle,
-                        contentDescription = null,
-                        tint = colors.RiskLow,
-                        modifier = Modifier.size(16.dp)
-                    )
-                    Spacer(modifier = Modifier.width(10.dp))
-                    Column {
-                        Text(
-                            text = title,
-                            style = LGType.BodyMedium.copy(fontSize = 13.sp),
-                            color = colors.TextPrimary
-                        )
-                        Text(
-                            text = subtitle,
-                            style = LGType.Caption.copy(fontSize = 11.sp),
-                            color = colors.TextSecondary
-                        )
-                    }
-                }
-            }
-        }
-
-        Spacer(modifier = Modifier.height(20.dp))
-
-        // ── Offline Privacy Assurance Badge ───────────────────────────────────
-        Row(
-            modifier = Modifier
-                .fillMaxWidth()
-                .background(colors.SurfaceSubdued, RoundedCornerShape(10.dp))
-                .border(BorderStroke(1.dp, colors.BorderSubtle), RoundedCornerShape(10.dp))
-                .padding(horizontal = 14.dp, vertical = 10.dp),
-            verticalAlignment = Alignment.CenterVertically
-        ) {
-            Icon(
-                imageVector = Icons.Filled.Lock,
-                contentDescription = "Confidential",
-                tint = colors.RiskLow,
-                modifier = Modifier.size(16.dp)
-            )
-            Spacer(modifier = Modifier.width(10.dp))
-            Text(
-                text = "100% On-Device & Private. Documents never leave your phone.",
-                style = LGType.Caption.copy(fontSize = 11.sp),
-                color = colors.TextSecondary
-            )
-        }
-
         Spacer(modifier = Modifier.height(16.dp))
     }
 }
+

@@ -87,6 +87,12 @@ class MainViewModel(
 
     val biometricLock: Flow<Boolean> = preferenceManager.biometricLock
 
+    fun setBiometricLock(enabled: Boolean) {
+        viewModelScope.launch {
+            preferenceManager.setBiometricLock(enabled)
+        }
+    }
+
     private val _proProductPrice = MutableStateFlow<String?>(null)
     val proProductPrice: StateFlow<String?> = _proProductPrice.asStateFlow()
 
@@ -319,6 +325,22 @@ class MainViewModel(
                 )
             } catch (e: Exception) {
                 _uiState.value = AuditState.Error(e.localizedMessage ?: "Unknown error occurred")
+            }
+        }
+    }
+
+    fun processPdfUri(uri: Uri, defaultTitle: String = "Imported PDF Contract") {
+        viewModelScope.launch {
+            try {
+                _uiState.value = AuditState.Scanning
+                val text = scannerEngine.extractTextFromPdf(uri)
+                if (text.isBlank()) {
+                    _uiState.value = AuditState.Error("Could not extract any readable text from this PDF.")
+                    return@launch
+                }
+                processExtractedText(text, defaultTitle)
+            } catch (e: Exception) {
+                _uiState.value = AuditState.Error(e.localizedMessage ?: "Failed to extract text from PDF")
             }
         }
     }
