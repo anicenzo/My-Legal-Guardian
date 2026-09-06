@@ -25,6 +25,10 @@ import androidx.fragment.app.FragmentActivity
 import androidx.lifecycle.ViewModelProvider
 import com.example.ui.MainViewModelFactory
 
+import androidx.compose.foundation.layout.WindowInsets
+import androidx.compose.foundation.layout.consumeWindowInsets
+import androidx.compose.foundation.layout.safeDrawing
+
 class MainActivity : FragmentActivity() {
     private lateinit var viewModel: MainViewModel
     private lateinit var scannerEngine: ScannerEngine
@@ -58,6 +62,7 @@ class MainActivity : FragmentActivity() {
                     modifier = Modifier.fillMaxSize(),
                     containerColor = colors.Background,
                     contentColor = colors.TextPrimary,
+                    contentWindowInsets = WindowInsets.safeDrawing,
                     bottomBar = {
                         LGBottomNav(
                             selectedRoute = currentRoute,
@@ -70,6 +75,7 @@ class MainActivity : FragmentActivity() {
                             .fillMaxSize()
                             .background(colors.Background)
                             .padding(bottom = innerPadding.calculateBottomPadding())
+                            .consumeWindowInsets(innerPadding)
                     ) {
                         when (currentRoute) {
                             "scan" -> HomeScreen(viewModel = viewModel)
