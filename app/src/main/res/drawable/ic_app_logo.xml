@@ -5,11 +5,10 @@
     android:viewportWidth="108"
     android:viewportHeight="108">
 
-    <!-- Viewfinder Corner Brackets (White, Monoline with Rounded Caps & Corners) -->
-    <!-- Safe zone diameter: 66dp (radius 33dp). Mask diameter: 72dp (radius 36dp).
-         Center: (54, 54). Bracket outer bounds: [33, 75] in X and Y (42dp x 42dp).
-         Outer corner distance from center: sqrt(21^2 + 21^2) = 29.7dp.
-         With 2.6dp stroke width, outer stroke edge is at 31.0dp, safely inside 33dp radius circle! -->
+    <!-- Dark Navy Background (#0E1A32) -->
+    <path
+        android:fillColor="#0E1A32"
+        android:pathData="M 0,0 h 108 v 108 h -108 z" />
 
     <!-- Top-Left Bracket -->
     <path
