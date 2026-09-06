@@ -27,8 +27,8 @@ android {
     applicationId = "com.anixium.mylegalguardian"
     minSdk = 26
     targetSdk = 36
-    versionCode = 9
-    versionName = "2.0.0"
+    versionCode = 10
+    versionName = "2.0.1"
     testInstrumentationRunner = "androidx.test.runner.AndroidJUnitRunner"
   }
 
@@ -94,7 +94,7 @@ dependencies {
   
   // Offline scanning & LiteRT ML logic
   implementation(libs.play.services.mlkit.document.scanner)
-  implementation(libs.play.services.mlkit.text.recognition)
+  implementation(libs.mlkit.text.recognition)
   implementation(libs.play.services.tflite.java)
   
   // In-app Billing for Pro upgrade (managed via Qonversion)
