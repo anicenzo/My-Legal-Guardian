@@ -297,7 +297,7 @@ fun SettingsScreen(
             SettingsSection {
                 SettingsInfoRow("App", "Legal AI — Contract Scanner")
                 HorizontalDivider(color = colors.Border, thickness = 1.dp, modifier = Modifier.padding(vertical = 12.dp))
-                SettingsInfoRow("Version", "1.6.0 (Offline Build)")
+                SettingsInfoRow("Version", "2.0.0 (Offline Build)")
                 HorizontalDivider(color = colors.Border, thickness = 1.dp, modifier = Modifier.padding(vertical = 12.dp))
                 SettingsInfoRow("Developer", "Anixium Studios")
                 HorizontalDivider(color = colors.Border, thickness = 1.dp, modifier = Modifier.padding(vertical = 12.dp))

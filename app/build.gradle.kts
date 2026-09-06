@@ -27,8 +27,8 @@ android {
     applicationId = "com.anixium.mylegalguardian"
     minSdk = 26
     targetSdk = 36
-    versionCode = 8
-    versionName = "1.6.0"
+    versionCode = 9
+    versionName = "2.0.0"
     testInstrumentationRunner = "androidx.test.runner.AndroidJUnitRunner"
   }
 
@@ -42,6 +42,14 @@ android {
       isMinifyEnabled = true
       isShrinkResources = true
       proguardFiles(getDefaultProguardFile("proguard-android-optimize.txt"), "proguard-rules.pro")
+      ndk {
+        debugSymbolLevel = "FULL"
+      }
+    }
+  }
+  packaging {
+    jniLibs {
+      useLegacyPackaging = false
     }
   }
   compileOptions {
